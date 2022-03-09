@@ -11,4 +11,9 @@ Usage:
 cd ros_ws
 mkdir ./src
 rosinstall ./src https://raw.githubusercontent.com/HaoguangYang/omniveyor_hardware/master/omniveyor_hardware.rosinstall
+# dirty-fix: nimbro_network cmake file formating
+sed -i 's/cmake_minimum_required(VERSION 3.10)/cmake_minimum_required(VERSION 3.10.0)/g' \
+    ./src/omniveyor_hardware/nimbro_network/nimbro_network/CMakeLists.txt
+# now it's safe to build.
+catkin_make -DCMAKE_BUILD_TYPE=Release
 ```
