@@ -1,0 +1,15 @@
+[Unit]
+Description=Setup virtual can CAN0 for debugging
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/sbin/ip link set can0 type can bitrate 1000000 triple-sampling on restart-ms 100
+ExecStart=/sbin/ip link set can0 up
+ExecStop=/sbin/ip link set can0 down
+
+[Install]
+WantedBy=multi-user.target
+
+# Put this file in /etc/systemd/system/

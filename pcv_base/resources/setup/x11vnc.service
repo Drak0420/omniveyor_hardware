@@ -1,0 +1,18 @@
+[Unit]
+Description=VNC Server for X11
+##optional for better performance
+After=syslog.target network-online.target
+##optional for better performance
+Wants=syslog.target network-online.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c "/usr/bin/x11vnc -ncache 2 -auth /var/run/sddm/* -display :0 -forever -loop -noxdamage -repeat -passwd crl -shared -capslock"
+ExecStop=/bin/bash -c "/usr/bin/x11vnc -R stop"
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target graphical.target
+
+# place this file in /etc/systemd/system/
