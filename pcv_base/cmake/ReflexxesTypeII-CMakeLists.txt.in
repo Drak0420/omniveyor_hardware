@@ -1,0 +1,24 @@
+############################################################
+# CMakeLists to download ReflexxesTypeII.
+#
+# Copyright 2022. All Rights Reserved.
+#
+# Created: Mar 08 2022
+# Authors: Haoguang Yang
+############################################################
+
+cmake_minimum_required(VERSION 3.6)
+
+project(ReflexxesTypeII-download NONE)
+
+include(ExternalProject)
+ExternalProject_Add(ReflexxesTypeII
+    # Directories
+    SOURCE_DIR ${PCV_BASE_EXT_DIR}/ReflexxesTypeII
+    # Download
+    GIT_REPOSITORY https://github.com/Reflexxes/RMLTypeII.git
+    # No configure for non-cmake project
+    CONFIGURE_COMMAND ""
+    # Install
+    INSTALL_COMMAND ""
+) 

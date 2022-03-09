@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="keyboard_teleop" default="0"/>
+    <arg name="joystick_teleop" default="0"/>
+    <arg name="remote_teleop"   default="0"/>
+    <arg name="teleop_namespace" default="remote_teleop"/>
+    <arg name="teleop_rx_port"  default="17102"/>
+
+	<arg name="front_rgbd" default="1"/>
+	<arg name="rear_rgbd" default="1"/>
+	<arg name="arduino_payload" default="1"/>
+
+	<!-- Main control for the base, transformations, logging -->
+    <include file="$(find pcv_base)/launch/pcv_node.launch">
+		<arg name="keyboard_teleop" value="$(arg keyboard_teleop)"/>
+    	<arg name="joystick_teleop" value="$(arg joystick_teleop)"/>
+    	<arg name="remote_teleop"   value="$(arg remote_teleop)"/>
+    	<arg name="teleop_namespace" value="$(arg teleop_namespace)"/>
+    	<arg name="teleop_rx_port"  value="$(arg teleop_rx_port)"/>
+	</include>
+
+	<!-- Laser scanner -->
+	<include file="$(find pcv_base)/launch/includes/laser.launch" />
+
+	<!-- realsense d1 & d2 -->
+	<group if="$(arg front_rgbd)">
+		<include file="$(find pcv_base)/launch/includes/realsense-d1.launch" />
+	</group>
+	<group if="$(arg rear_rgbd)">
+		<include file="$(find pcv_base)/launch/includes/realsense-d2.launch" />
+	</group>
+
+	<!-- Odometry (IMU, VO, ekf) -->
+	<include file="$(find pcv_base)/launch/includes/odom.launch" />
+
+	<!-- serial port payload interface -->
+	<group if="$(arg arduino_payload)">
+		<include file="$(find pcv_base)/launch/includes/payload.launch" />
+    </group>
+</launch>

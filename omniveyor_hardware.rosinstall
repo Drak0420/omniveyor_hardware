@@ -1,0 +1,30 @@
+- git:
+    local-name: omniveyor_hardware/robot_localization
+    uri: https://github.com/HaoguangYang/robot_localization.git
+    version: noetic-devel
+
+- git:
+    local-name: omniveyor_hardware/nimbro_network
+    uri: https://github.com/AIS-Bonn/nimbro_network.git
+    version: bugfix/prune_segfault
+    
+- git:
+    local-name: omniveyor_common
+    uri: https://github.com/HaoguangYang/omniveyor_common.git
+    version: master 
+
+- git:
+    local-name: omniveyor_hardware/pcv_base
+    uri: https://github.com/HaoguangYang/omniveyor_hardware.git
+    version: master
+
+#- git:
+#    local-name: omniveyor_utils
+#    uri: https://github.com/HaoguangYang/omniveyor_utils.git
+#    version: master
+    
+- git:
+    local-name: ../Arduino/libraries/Rosserial_Arduino_Library
+    uri: https://github.com/frankjoshua/rosserial_arduino_lib.git
+    version: 0.7.9
+    

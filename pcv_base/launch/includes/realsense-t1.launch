@@ -1,0 +1,44 @@
+<launch>
+  <arg name="device_type_camera_t1"    		default="t265"/>
+  <arg name="usb_port_id_t1"    			default="5-4|6-4"/>
+  <arg name="camera_t1"              			default="cam_t1"/>
+  <arg name="tf_prefix_camera_t1"         default="$(arg camera_t1)"/>
+  <arg name="initial_reset"             default="true"/>
+  <arg name="enable_fisheye"            default="false"/>
+  <arg name="topic_odom_in"             default="odom"/>
+  <arg name="calib_odom_file"           default=""/>
+
+  <group ns="$(arg camera_t1)">
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="device_type"           value="$(arg device_type_camera_t1)"/>
+      <!--arg name="usb_port_id"           value="$(arg usb_port_id_t1)"/-->
+      <arg name="tf_prefix"             value="$(arg tf_prefix_camera_t1)"/>
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+      <arg name="enable_fisheye1"       value="$(arg enable_fisheye)"/>
+      <arg name="enable_fisheye2"       value="$(arg enable_fisheye)"/>
+      <arg name="topic_odom_in"         value="$(arg topic_odom_in)"/>
+      <arg name="calib_odom_file"       value="$(arg calib_odom_file)"/>
+      <arg name="enable_gyro"              value="true"/>
+      <arg name="enable_accel"             value="true"/>
+      <arg name="enable_pose"              value="true"/>
+      <arg name="unite_imu_method"         value="linear_interpolation"/>
+      <arg name="publish_odom_tf"          value="false"/>
+      <arg name="respawn"               value="true"/>
+    </include>
+  </group>
+  
+  <node pkg="tf2_ros" type="static_transform_publisher" name="cam_t1_odom_link" args="0.285 -0.08 0.37 0 0 0 odom cam_t1_odom_frame"/>
+  
+  <!--node pkg="tf2_ros" type="static_transform_publisher" name="cam_t1_odom_link" args="0 0 0 0 0 0 odom cam_t1_odom_frame"/-->
+  
+  <!--node pkg="web_video_server" type="web_video_server" name="web_video_server"/-->
+  <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter">
+    <param name="use_mag"               value="false"/>
+    <param name="publish_tf"            value="false"/>
+    <param name="world_frame"           value="enu"/>
+    <remap from="/imu/data_raw"         to="/cam_t1/imu"/>
+    <remap from="/imu/data"             to="/cam_t1/imu_filtered"/>
+  </node>
+
+</launch>
+

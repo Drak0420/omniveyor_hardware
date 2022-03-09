@@ -1,0 +1,36 @@
+<launch>
+    <arg name="logging"         default="1"/>
+    <arg name="keyboard_teleop" default="0"/>
+    <arg name="joystick_teleop" default="0"/>
+    
+    <arg name="remote_teleop"   default="0"/>
+    <arg name="teleop_namespace" default="remote_teleop"/>
+    <arg name="teleop_rx_port"  default="17102"/>
+    
+    <node pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen"/>
+    
+    <!--Static Transforms-->
+    <param name="robot_description"
+    command="$(find xacro)/xacro --inorder '$(find omniveyor_common)/urdf/omniveyor.urdf.xacro' gazebo:=false gpu_ray_tracing:=false" />
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+    
+    <group if="$(arg logging)">
+        <!--Logging-->
+        <node pkg="pcv_base" type="databaseLogger.py" name="db_logger" output="screen"/>
+    </group>
+    
+    <!-- teleop method -->
+    <group if="$(arg remote_teleop)">
+        <include file="$(find pcv_base)/launch/includes/remote_teleop.launch">
+            <arg name="teleop_namespace" value="$(arg teleop_namespace)"/>
+            <arg name="teleop_rx_port"  value="$(arg teleop_rx_port)"/>
+        </include>
+    </group>
+    <group if="$(arg joystick_teleop)">
+        <include file="$(find pcv_base)/launch/includes/joystick_teleop.launch" />
+    </group>
+    <group if="$(arg keyboard_teleop)">
+        <include file="$(find pcv_base)/launch/includes/keyboard_teleop.launch" />
+    </group>
+</launch>

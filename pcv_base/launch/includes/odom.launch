@@ -1,0 +1,14 @@
+<launch>
+    <!-- visual odom & imu (hardware) -->
+    <include file="$(find pcv_base)/launch/includes/realsense-t1.launch" />
+
+    <!-- Odom fusion -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_odom" clear_params="true">
+        <rosparam command="load" file="$(find pcv_base)/resources/cfg/ekf_odom.yaml" />
+        <remap from="odometry/filtered" to="odom/filtered"/>
+        <!--  Placeholder for output topic remapping
+        <remap from="accel/filtered" to=""/>
+        -->
+    </node>
+    
+</launch>
