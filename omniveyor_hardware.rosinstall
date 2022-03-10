@@ -12,12 +12,7 @@
     local-name: omniveyor
     uri: https://github.com/HaoguangYang/omniveyor.git
     version: master
-    
-- git:
-    local-name: omniveyor_hardware/robot_localization
-    uri: https://github.com/HaoguangYang/robot_localization.git
-    version: noetic-devel
-    
+
 - git:
     local-name: ../Arduino/libraries/Rosserial_Arduino_Library
     uri: https://github.com/frankjoshua/rosserial_arduino_lib.git

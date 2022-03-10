@@ -1,0 +1,4 @@
+[submodule "robot_localization"]
+    path = robot_localization
+    url = https://github.com/HaoguangYang/robot_localization.git
+    branch = noetic_devel
