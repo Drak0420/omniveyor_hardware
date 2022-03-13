@@ -1,11 +1,9 @@
 <launch>
-    <arg name="teleop_namespace" default="remote_teleop"/>
+    <arg name="teleop_namespace" default="/"/>
     <arg name="teleop_rx_port"  default="17102"/>
     
     <include file="$(find pcv_base)/launch/includes/multi_robot_rx.launch">
         <arg name="rx_port" value="$(arg teleop_rx_port)"/>
         <arg name="remote_namespace" value="$(arg teleop_namespace)"/>
-        <remap from="$(arg teleop_namespace)/cmd_vel" to="cmd_vel"/>
-        <remap from="$(arg teleop_namespace)/control_mode" to="control_mode"/>
     </include>
 </launch>
