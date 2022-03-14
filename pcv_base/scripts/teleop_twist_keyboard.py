@@ -93,11 +93,13 @@ if __name__=="__main__":
     pub2 = rospy.Publisher(enaCmdTopic, Byte, queue_size = 1)
     #mode = Byte(1)
     # hold there until the subsecribers are ready
-    r = rospy.Rate(50)
-    while not rospy.is_shutdown() and not pub2.get_num_connections():
-        r.sleep()
-    if not rospy.is_shutdown():
-        pub2.publish(Byte(data=1))
+    r = rospy.Rate(30)
+    while not pub2.get_num_connections():
+        if not rospy.is_shutdown():
+            r.sleep()
+        else:
+            sys.exit(0)
+    pub2.publish(Byte(data=1))
     #os.system('rostopic pub --once /mobile_base_controller/control_mode std_msgs/Byte 1')
 
     speed = rospy.get_param("~speed", 0.5)

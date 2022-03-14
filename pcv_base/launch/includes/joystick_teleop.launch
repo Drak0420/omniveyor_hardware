@@ -1,4 +1,4 @@
 <launch>
     <node pkg="joy" type="joy_node" name="joy" output="screen"/>
-    <node pkg="pcv_base" type="teleop_twist_joystick.py" name="teleop-joy" output="screen"/>
+    <node pkg="pcv_base" type="teleop_twist_joystick.py" name="teleop_joy" output="screen"/>
 </launch>

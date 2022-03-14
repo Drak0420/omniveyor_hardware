@@ -1,3 +1,3 @@
 <launch>
-    <node pkg="pcv_base" type="teleop_twist_keyboard.py" name="teleop-kb" output="screen"/>
+    <node pkg="pcv_base" type="teleop_twist_keyboard.py" name="teleop_kb" output="screen"/>
 </launch>
