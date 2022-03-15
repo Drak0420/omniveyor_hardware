@@ -1,3 +1,10 @@
 <launch>
-    <node pkg="pcv_base" type="teleop_twist_keyboard.py" name="teleop_kb" output="screen"/>
+    <arg name="new_window" default="0"/>
+    
+    <group if="$(arg new_window)">
+        <node pkg="pcv_base" type="teleop_twist_keyboard.py" name="teleop_kb" output="screen" launch-prefix="xterm -e"/>
+    </group>
+    <group unless="$(arg new_window)">
+        <node pkg="pcv_base" type="teleop_twist_keyboard.py" name="teleop_kb" output="screen"/>
+    </group>
 </launch>

@@ -17,7 +17,7 @@ class joystickTeleop():
             if not rospy.is_shutdown():
                 r.sleep()
             else:
-                break
+                return
 
     def joy_cb(self, msg):
         cmd = Twist()
@@ -45,4 +45,3 @@ if __name__=="__main__":
     rospy.init_node('teleop_twist_joystick')
     js = joystickTeleop()
     js.main()
-
