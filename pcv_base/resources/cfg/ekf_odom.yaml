@@ -149,7 +149,7 @@ odom1_nodelay: false
 #pose0_rejection_threshold: 2  # Note the difference in parameter name
 #pose0_nodelay: false
 
-imu0: cam_t1/imu_filtered
+imu0: cam_t1/imu/filtered
 imu0_config: [false, false, false,
               true,  true,  true,
               false, false, false,
