@@ -84,11 +84,14 @@ class keyboardTwistTeleop:
         rospy.on_shutdown(self.shutdown)
         # hold there until the subsecribers are ready
         r = rospy.Rate(30)
-        while not self.pub2.get_num_connections():
-            if not rospy.is_shutdown():
-                r.sleep()
-            else:
-                return
+        try:
+            while not self.pub2.get_num_connections():
+                if not rospy.is_shutdown():
+                    r.sleep()
+                else:
+                    return
+        except rospy.exceptions.ROSInterruptException:
+            return
 
     def getKey(self):
         tty.setraw(sys.stdin.fileno())
