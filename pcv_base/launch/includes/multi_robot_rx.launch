@@ -6,7 +6,8 @@
       See udp_sender.launch for the sender part.
     -->
     
-    <arg name="rx_port"            default="17002" />
+    <arg name="rx_port_base"       default="17050"/>
+    <arg name="rx_port"            default="$(eval rx_port_base + env('NODE_NO'))" />
     <arg name="remote_namespace"   default="multi_robot"/>
     
     <!-- The receiver node -->

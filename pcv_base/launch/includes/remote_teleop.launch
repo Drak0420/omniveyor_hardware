@@ -1,6 +1,7 @@
 <launch>
     <arg name="teleop_namespace" default="/"/>
-    <arg name="teleop_rx_port"  default="17102"/>
+    <arg name="teleop_rx_port_base" default="17100"/>
+    <arg name="teleop_rx_port"  default="$(eval teleop_rx_port_base + env('NODE_NO'))"/>
     
     <include file="$(find pcv_base)/launch/includes/multi_robot_rx.launch">
         <arg name="rx_port" value="$(arg teleop_rx_port)"/>
