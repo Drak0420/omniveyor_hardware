@@ -4,14 +4,18 @@
     <arg name="joystick_teleop" default="0"/>
     
     <arg name="remote_teleop"   default="0"/>
-    <arg name="teleop_namespace" default="remote_teleop"/>
-    <arg name="teleop_rx_port"  default="17102"/>
+    <arg name="teleop_namespace" default="/"/>
+    <arg name="teleop_rx_port_base" default="17100"/>
+    <arg name="teleop_rx_port"  default="$(eval teleop_rx_port_base + env('NODE_NO'))"/>
     
-    <node pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen"/>
+    <arg name="lidar_safeguard" default="false"/>
+    
+    <node pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen">
+        <param name="lidar_safeguard" value="$(arg lidar_safeguard)"/>
+    </node>
     
     <!--Static Transforms-->
-    <param name="robot_description"
-    command="$(find xacro)/xacro --inorder '$(find omniveyor_common)/urdf/omniveyor.urdf.xacro' gazebo:=false gpu_ray_tracing:=false" />
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find omniveyor_common)/urdf/omniveyor.urdf.xacro' gazebo:=false" />
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
     

@@ -50,51 +50,52 @@ void PCVBaseNode::cmdAccRecvCallback(const geometry_msgs::Accel::ConstPtr& xdd_d
 void PCVBaseNode::lidarCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
     uint32_t nSamples = scan->ranges.size();
-    float xlaser, ylaser;
     float minDist = 1.e6;
-    float iDist;
     uint32_t ind;
     for(uint32_t i=0; i<nSamples; i++){
-        xlaser = scan->ranges[i]*rayCos[i];
-        ylaser = scan->ranges[i]*raySin[i];
+        float xlaser = scan->ranges[i]*rayCos[i];
+        float ylaser = scan->ranges[i]*raySin[i];
         rayX[i] = tfCos*xlaser - tfSin*ylaser + tfX;
         rayY[i] = tfSin*xlaser + tfCos*ylaser + tfY;
-        iDist = fmax(fabs(rayX[i]), fabs(rayY[i]));
+        float iDist = fmax(fabs(rayX[i]), fabs(rayY[i]));
         if (iDist < minDist){
             minDist = iDist;
             ind = i;
         }
     }
-    
+    //std::cout << minDist << "  " << ind << std::endl;
     const float hardBound = PC_length*0.5;
     const float softBound = hardBound+0.05;
-    if (iDist < softBound){
-        if (fabs(rayX[ind])==iDist){    // front obstacle, limit frontal velocity
-            gxd_des_g[0] = (rayX[ind]>0.)? fmin(0., gxd_des_g_raw[0]) : fmax(0., gxd_des_g_raw[0]);
-            gxd_des_g[1] = gxd_des_g_raw[1];
-            if (fabs(rayY[ind])<hardBound){
-                // left side obstacle. Prevent steer right.
-                // right side obstacle. Prevent steer left.
-                gxd_des_g[2] = ((rayY[ind]>0.)==(rayX[ind]>0.))?
-                                fmax(0., gxd_des_g_raw[2]) : fmin(0., gxd_des_g_raw[2]);
-            } else {
-                gxd_des_g[2] = gxd_des_g_raw[2];
-            }
-        } else {                // side obstacle. limit side velocity
-            gxd_des_g[0] = gxd_des_g_raw[0];
-            gxd_des_g[1] = (rayY[ind]>0.)? fmin(0., gxd_des_g_raw[1]) : fmax(0., gxd_des_g_raw[1]);
-            if (fabs(rayX[ind])<hardBound){
-                // side obstacles.
-                gxd_des_g[2] = ((rayX[ind]>0.)==(rayY[ind]>0.))?
-                                fmin(0., gxd_des_g_raw[2]) : fmax(0., gxd_des_g_raw[2]);
-            } else {
-                gxd_des_g[2] = gxd_des_g_raw[2];
-            }
-        }
-    } else {
+    if (minDist >= softBound){
         gxd_des_g[0] = gxd_des_g_raw[0];
         gxd_des_g[1] = gxd_des_g_raw[1];
         gxd_des_g[2] = gxd_des_g_raw[2];
+        return;
+    }
+    if (fabs(rayX[ind])>=fabs(rayY[ind])){    // front obstacle, limit frontal velocity
+        gxd_des_g[0] = (rayX[ind]>0.)? fmin(0., gxd_des_g_raw[0]) : fmax(0., gxd_des_g_raw[0]);
+        gxd_des_g[1] = gxd_des_g_raw[1];
+        if (fabs(rayY[ind])<hardBound){
+            // left side obstacle. Prevent steer right.
+            // right side obstacle. Prevent steer left.
+            gxd_des_g[2] = ((rayY[ind]>0.)==(rayX[ind]>0.))?
+                            fmax(0., gxd_des_g_raw[2]) : fmin(0., gxd_des_g_raw[2]);
+            //std::cout << "FrontSideObstacle" << std::endl;
+        } else {
+            gxd_des_g[2] = gxd_des_g_raw[2];
+            //std::cout << "FrontObstacle" << std::endl;
+        }
+    } else {                // side obstacle. limit side velocity
+        //std::cout << "SideObstacle" << std::endl;
+        gxd_des_g[0] = gxd_des_g_raw[0];
+        gxd_des_g[1] = (rayY[ind]>0.)? fmin(0., gxd_des_g_raw[1]) : fmax(0., gxd_des_g_raw[1]);
+        if (fabs(rayX[ind])<hardBound){
+            // side obstacles.
+            gxd_des_g[2] = ((rayX[ind]>0.)==(rayY[ind]>0.))?
+                            fmin(0., gxd_des_g_raw[2]) : fmax(0., gxd_des_g_raw[2]);
+        } else {
+            gxd_des_g[2] = gxd_des_g_raw[2];
+        }
     }
 }
 

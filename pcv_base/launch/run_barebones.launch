@@ -2,9 +2,10 @@
 <launch>
 	<arg name="keyboard_teleop" default="0"/>
     <arg name="joystick_teleop" default="0"/>
-    <arg name="remote_teleop"   default="0"/>
-    <arg name="teleop_namespace" default="remote_teleop"/>
-    <arg name="teleop_rx_port"  default="17102"/>
+    <arg name="remote_teleop"   default="1"/>
+    <arg name="teleop_namespace" default="/"/>
+    <arg name="teleop_rx_port_base" default="17100"/>
+    <arg name="teleop_rx_port"  default="$(eval teleop_rx_port_base + env('NODE_NO'))"/>
 
 	<arg name="front_rgbd" default="1"/>
 	<arg name="rear_rgbd" default="1"/>
