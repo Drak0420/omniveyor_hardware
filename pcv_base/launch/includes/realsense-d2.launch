@@ -36,7 +36,7 @@
     </include>
     
     <node pkg="nodelet" type="nodelet" name="depth_proc_nodelet"
-      args="load depth_image_proc/point_cloud_xyz realsense2_camera_manager false">
+      args="load depth_image_proc/point_cloud_xyz realsense2_camera_manager false" respawn="true">
       <remap from="camera_info" to="depth/camera_info"/>
       <remap from="image_rect" to="depth/image_rect_raw"/>
       <remap from="points" to="depth/points"/>
