@@ -13,7 +13,7 @@
     
     <arg name="target"    default="192.168.254.100" />
     <arg name="tx_port_base" default="17000"/>
-    <arg name="tx_port"   default="$(eval tx_port_base + env('NODE_NO'))" />
+    <arg name="tx_port"   default="$(eval tx_port_base + int(env('NODE_NO')))" />
     
     <!-- The sender node -->
     <node name="$(anon sender)" pkg="nimbro_topic_transport" type="sender" output="screen">

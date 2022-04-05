@@ -7,7 +7,7 @@
     -->
     
     <arg name="rx_port_base"       default="17050"/>
-    <arg name="rx_port"            default="$(eval rx_port_base + env('NODE_NO'))" />
+    <arg name="rx_port"            default="$(eval rx_port_base + int(env('NODE_NO')))" />
     <arg name="remote_namespace"   default="multi_robot"/>
     
     <!-- The receiver node -->

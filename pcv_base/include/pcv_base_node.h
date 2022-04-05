@@ -77,7 +77,7 @@ class PCVBaseNode{
     static int kbhit(void);
     /*------------------------static variable declarations------------------------*/
     
-    ros::NodeHandle _rosNH;
+    ros::NodeHandle *_rosNH;
     ros::Publisher odomPub;
     ros::Publisher eStatusPub;
     ros::Subscriber cmdSubV;

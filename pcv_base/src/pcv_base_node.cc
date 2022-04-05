@@ -65,13 +65,14 @@ void PCVBaseNode::lidarCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
     }
     //std::cout << minDist << "  " << ind << std::endl;
     const float hardBound = PC_length*0.5;
-    const float softBound = hardBound+0.05;
+    const float softBound = hardBound+0.10;
     if (minDist >= softBound){
         gxd_des_g[0] = gxd_des_g_raw[0];
         gxd_des_g[1] = gxd_des_g_raw[1];
         gxd_des_g[2] = gxd_des_g_raw[2];
         return;
     }
+    //std::cout << rayX[ind] << "  " << rayY[ind] << std::endl;
     if (fabs(rayX[ind])>=fabs(rayY[ind])){    // front obstacle, limit frontal velocity
         gxd_des_g[0] = (rayX[ind]>0.)? fmin(0., gxd_des_g_raw[0]) : fmax(0., gxd_des_g_raw[0]);
         gxd_des_g[1] = gxd_des_g_raw[1];
@@ -140,7 +141,7 @@ void PCVBaseNode::ctrlModeRecvCallback(const std_msgs::Byte::ConstPtr& ctrlMode)
     Publish rate = 50Hz.
 */
 PCVBaseNode::PCVBaseNode(int argc, char *argv[], ros::NodeHandle *rosNH) : 
-    _rosNH(*rosNH)
+    _rosNH(rosNH)
 {
     std::string         laserScanTopic;
     std::string         odomTopic;
@@ -150,28 +151,28 @@ PCVBaseNode::PCVBaseNode(int argc, char *argv[], ros::NodeHandle *rosNH) :
     std::string         accelerationCommandTopic;
     std::string         controlModeTopic;
     bool                lidarSafeguard;
+    
+    ros::param::param<std::string>("~/laser_scan_topic",laserScanTopic,"scan");
+    ros::param::param<std::string>("~/odom_topic",odomTopic,"odom");
+    ros::param::param<std::string>("~/electrical_status_topic",electricalStatusTopic,"electricalStatus");
+    ros::param::param<std::string>("~/position_command_topic",positionCommandTopic,"cmd_pos");
+    ros::param::param<std::string>("~/velocity_command_topic",velocityCommandTopic,"cmd_vel");
+    ros::param::param<std::string>("~/acceleration_command_topic",accelerationCommandTopic,"cmd_acc");
+    ros::param::param<std::string>("~/control_mode_topic",controlModeTopic,"control_mode");
+    ros::param::param<bool>("~/lidar_safeguard",lidarSafeguard,false);
+    ros::param::param<double>("~/update_rate",this->pubRate,50.0);
 
-    _rosNH.param<std::string>("laser_scan_topic",laserScanTopic,"scan");
-    _rosNH.param<std::string>("odom_topic",odomTopic,"odom");
-    _rosNH.param<std::string>("electrical_status_topic",electricalStatusTopic,"electricalStatus");
-    _rosNH.param<std::string>("position_command_topic",positionCommandTopic,"cmd_pos");
-    _rosNH.param<std::string>("velocity_command_topic",velocityCommandTopic,"cmd_vel");
-    _rosNH.param<std::string>("acceleration_command_topic",accelerationCommandTopic,"cmd_acc");
-    _rosNH.param<std::string>("control_mode_topic",controlModeTopic,"control_mode");
-    _rosNH.param<bool>("lidar_safeguard",lidarSafeguard,false);
-    _rosNH.param<double>("update_rate",this->pubRate,50.0);
-
-    this->odomPub = _rosNH.advertise<nav_msgs::Odometry>(odomTopic, 10);
-    this->eStatusPub = _rosNH.advertise<omniveyor_common::electricalStatus>(electricalStatusTopic,1);
+    this->odomPub = _rosNH->advertise<nav_msgs::Odometry>(odomTopic, 10);
+    this->eStatusPub = _rosNH->advertise<omniveyor_common::electricalStatus>(electricalStatusTopic,1);
     //ros::Publisher statusPub = rosNH.advertise<std_msgs::Float64MultiArray>("dump",10);
     if (!lidarSafeguard){
-        this->cmdSubV = _rosNH.subscribe(velocityCommandTopic, 10, &PCVBaseNode::cmdVelRecvCallback, this);
+        this->cmdSubV = _rosNH->subscribe(velocityCommandTopic, 10, &PCVBaseNode::cmdVelRecvCallback, this);
     } else {
         //throw std::runtime_error("Method Not Implemented yet!");
         tf2_ros::Buffer tfBuffer;
         tf2_ros::TransformListener tfListener(tfBuffer);
         sensor_msgs::LaserScan::ConstPtr oneScan = 
-                ros::topic::waitForMessage<sensor_msgs::LaserScan>(laserScanTopic,_rosNH);
+                ros::topic::waitForMessage<sensor_msgs::LaserScan>(laserScanTopic,*_rosNH);
         uint32_t nSamples = oneScan->ranges.size();
         if ((rayCos=(float *)malloc(nSamples*sizeof(float)))==NULL){
             throw std::runtime_error("Out Of Memory");
@@ -192,10 +193,10 @@ PCVBaseNode::PCVBaseNode(int argc, char *argv[], ros::NodeHandle *rosNH) :
             theta += oneScan->angle_increment;
         }
         ros::Time now = ros::Time::now();
-        while (!tfBuffer.canTransform(oneScan->header.frame_id, "base_link",
+        while (!tfBuffer.canTransform("base_link", oneScan->header.frame_id,
                                 ros::Time::now(), ros::Duration(10.0)));
         geometry_msgs::TransformStamped baseToLaser = tfBuffer.lookupTransform(
-                            oneScan->header.frame_id, "base_link", ros::Time::now());
+                            "base_link", oneScan->header.frame_id, ros::Time::now());
         Eigen::Quaterniond q = Eigen::Quaterniond(baseToLaser.transform.rotation.w, 
                                                 baseToLaser.transform.rotation.x, 
                                                 baseToLaser.transform.rotation.y,
@@ -205,12 +206,12 @@ PCVBaseNode::PCVBaseNode(int argc, char *argv[], ros::NodeHandle *rosNH) :
         tfSin = (float)qm(1,0);
         tfX = (float)baseToLaser.transform.translation.x;
         tfY = (float)baseToLaser.transform.translation.y;
-        this->cmdSubV = _rosNH.subscribe(velocityCommandTopic, 10, &PCVBaseNode::cmdVelRawCallback, this);
-        this->lidarSub = _rosNH.subscribe(laserScanTopic, 10, &PCVBaseNode::lidarCallback, this);
+        this->cmdSubV = _rosNH->subscribe(velocityCommandTopic, 10, &PCVBaseNode::cmdVelRawCallback, this);
+        this->lidarSub = _rosNH->subscribe(laserScanTopic, 10, &PCVBaseNode::lidarCallback, this);
     }
-    this->cmdSubX = _rosNH.subscribe(positionCommandTopic, 10, &PCVBaseNode::cmdPosRecvCallback, this);
-    this->cmdSubA = _rosNH.subscribe(accelerationCommandTopic, 10, &PCVBaseNode::cmdAccRecvCallback, this);
-    this->ctrlModeSub = _rosNH.subscribe(controlModeTopic, 10, &PCVBaseNode::ctrlModeRecvCallback, this);
+    this->cmdSubX = _rosNH->subscribe(positionCommandTopic, 10, &PCVBaseNode::cmdPosRecvCallback, this);
+    this->cmdSubA = _rosNH->subscribe(accelerationCommandTopic, 10, &PCVBaseNode::cmdAccRecvCallback, this);
+    this->ctrlModeSub = _rosNH->subscribe(controlModeTopic, 10, &PCVBaseNode::ctrlModeRecvCallback, this);
 
     cout << "vehicle startup" << endl;
     
