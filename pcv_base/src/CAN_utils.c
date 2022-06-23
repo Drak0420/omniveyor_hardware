@@ -37,8 +37,9 @@ create_can_socket (uint16_t can_id, uint16_t filter_mask)
 	cf.can_id = can_id;
 	cf.can_mask = filter_mask;
 	setsockopt (s, SOL_CAN_RAW, CAN_RAW_FILTER, &cf, sizeof (cf));
-	setsockopt (s, SOL_CAN_RAW, SO_SNDBUF, 8192, sizeof(int));	//was 1000000
-	setsockopt (s, SOL_CAN_RAW, SO_RCVBUF, 8192, sizeof(int));	//was 1000000
+	int bufSize = 8192;
+	setsockopt (s, SOL_CAN_RAW, SO_SNDBUF, &bufSize, sizeof(int));	//was 1000000
+	setsockopt (s, SOL_CAN_RAW, SO_RCVBUF, &bufSize, sizeof(int));	//was 1000000
 	strcpy (ifr.ifr_name, ifname);
 	ioctl (s, SIOCGIFINDEX, &ifr);
 	
