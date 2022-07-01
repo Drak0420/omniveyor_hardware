@@ -20,6 +20,7 @@
         <arg name="teleop_namespace" value="$(arg teleop_namespace)"/>
         <arg name="teleop_rx_port"  value="$(arg teleop_rx_port)"/>
         <arg name="lidar_safeguard" value="true"/>
+        <arg name="logging"         value="false"/>
     </include>
 
     <!-- Laser scanner -->
