@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 #import requests
 #from payload import payload  #Used to get UVC lamp data
-import pymysql.cursors
+# if using mysql
+#import pymysql.cursors
+# if using oracle sql
+import cx_Oracle
 from datetime import datetime
 import time
 import netifaces as ni
@@ -19,6 +22,16 @@ from move_base_msgs.msg import MoveBaseActionResult
 class SQL_Logger:
     def __init__(self):
         db_cred = ET.parse('/home/cartman/Dev/dbCredentials.xml')
+        
+        self.dbName = db_cred.findall('databaseName')[0].get('value')
+        thisNode = os.getenv('NODE_NO')
+        self.motorTableName = 'CARTMAN'+(thisNode.zfill(2))+'_MOTOR'    #db_cred.findall('motorTableName')[0].get('value')
+        self.navTableName = 'CARTMAN'+(thisNode.zfill(2))+'_NAV'        #db_cred.findall('navTableName')[0].get('value')
+        self.payloadTableName = 'CARTMAN'+(thisNode.zfill(2))+'_PAYLOAD'        #db_cred.findall('payloadTableName')[0].get('value')
+        self.telemetryTableName = 'CARTMAN'+(thisNode.zfill(2))+'_TELEMETRY'    #db_cred.findall('telemetryTableName')[0].get('value')
+        
+        # for mysql
+        """
         server = db_cred.findall('server')[0].get('value')
         portNo = db_cred.findall('port')
         if len(portNo)>0:
@@ -27,13 +40,16 @@ class SQL_Logger:
             portNo = 3306
         usrname = db_cred.findall('user')[0].get('value')
         passwd = db_cred.findall('password')[0].get('value')
-        self.dbName = db_cred.findall('databaseName')[0].get('value')
-        thisNode = os.getenv('NODE_NO')
-        self.motorTableName = 'CARTMAN'+(thisNode.zfill(2))+'_MOTOR'    #db_cred.findall('motorTableName')[0].get('value')
-        self.navTableName = 'CARTMAN'+(thisNode.zfill(2))+'_NAV'        #db_cred.findall('navTableName')[0].get('value')
-        self.payloadTableName = 'CARTMAN'+(thisNode.zfill(2))+'_PAYLOAD'        #db_cred.findall('payloadTableName')[0].get('value')
-        self.telemetryTableName = 'CARTMAN'+(thisNode.zfill(2))+'_TELEMETRY'    #db_cred.findall('telemetryTableName')[0].get('value')
         self.connection = pymysql.connect(host=server, port=portNo, user=usrname, password=passwd, database=self.dbName)    # Fill in your credentials  
+        """
+
+        # for oracle sql
+        connection_config = db_cred.findall('connection_config')[0].get('value')
+        usrname = db_cred.findall('user')[0].get('value')
+        passwd = db_cred.findall('password')[0].get('value')
+        self.connection = cx_Oracle.connect(user=usrname,password=passwd,dsn=connection_config,
+                                            encoding="UTF-8")
+
         self.UTC_OFFSET_TIMEDELTA = datetime.utcnow() - datetime.now()
 
         self.robot_ip = None
@@ -179,9 +195,9 @@ class SQL_Logger:
                 # INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
                 #Casts all parameters to strings
                 sql = "INSERT INTO `"+self.dbName+"`.`" + self.navTableName + "` \
-                        (`TimeStamp`, `PosX`, `PosY`, `Orientation`, \
-                        `VelX`, `VelY`, `AngVel`, \
-                        `DesX`, `DesY`, `DesOrient`, `NavStatus`\
+                        (`TIMEENTRY`, `POSX`, `POSY`, `ORIENTATION`, \
+                        `VELX`, `VELY`, `ANGVEL`, \
+                        `DESX`, `DESY`, `DESORIENT`, `NAVSTATUS`\
                         ) VALUES(\
                         '"+str(self.date)+"', \
                         '"+str(round(self.locX,4))+"','"+str(round(self.locY,4))+"','"+str(round(self.orientation,4))+"',\
@@ -190,7 +206,7 @@ class SQL_Logger:
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchone()
+                result = cursor.fetchall()
                 #print(sql)
                 self.newNavStat = False
         except:
@@ -206,10 +222,10 @@ class SQL_Logger:
                 # INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
                 #Casts all parameters to strings
                 sql = "INSERT INTO `"+self.dbName+"`.`" + self.motorTableName + "` \
-                        (`TimeStamp`, `steer1Amp`, `roll1Amp`, `steer2Amp`, \
-                        `roll2Amp`, `steer3Amp`, `roll3Amp`, `steer4Amp`, `roll4Amp`, \
-                        `steer1AMax`, `roll1AMax`, `steer2AMax`, `roll2AMax`, \
-                        `steer3AMax`, `roll3AMax`, `steer4AMax`, `roll4AMax`\
+                        (`TIMEENTRY`, `STEER1AMP`, `ROLL1AMP`, `STEER2AMP`, \
+                        `ROLL2AMP`, `STEER3AMP`, `ROLL3AMP`, `STEER4AMP`, `ROLL4AMP`, \
+                        `STEER1AMAX`, `ROLL1AMAX`, `STEER2AMAX`, `ROLL2AMAX`, \
+                        `STEER3AMAX`, `ROLL3AMAX`, `STEER4AMAX`, `ROLL4AMAX`\
                         ) VALUES(\
                         '"+str(self.date)+"',\
                         '"+str(round(self.steer_1_Amp_Sum/float(self.counter),3))+"','"+str(round(self.roll_1_Amp_Sum/float(self.counter),3))+"', \
@@ -223,7 +239,7 @@ class SQL_Logger:
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchone()
+                result = cursor.fetchall()
                 #print(sql)
                 
                 self.counter = 0
@@ -253,17 +269,20 @@ class SQL_Logger:
     def uploadPayloadData(self):
         try:
             with self.connection.cursor() as cursor:
-                # INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
+                # TODO: INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
+                """
+                # TODO: this has not been adapted to the latest GPIO message type
                 sql = "INSERT INTO `"+self.dbName+"`.`" + self.payloadTableName + "` \
-                        (`TimeStamp`, `PayloadSensor`, `PayloadState`\
+                        (`TIMEENTRY`, `STATE`, `DPINSTATE`\
                         ) VALUES(\
                         '"+str(self.date)+"', \
-                        '"+str(round(self.payloadStatus[0][2],3))+"','"+str(int(self.self.payloadStatus[0][1]))+"');"
+                        '"+str()+"','"+str()+"');"
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchone()
+                result = cursor.fetchall()
                 #print(sql)
+                """
                 self.newPayloadStat = False
         except:
             pass
@@ -277,7 +296,7 @@ class SQL_Logger:
             with self.connection.cursor() as cursor:
                 # INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
                 sql = "INSERT INTO `"+self.dbName+"`.`" + self.telemetryTableName + "` \
-                        (`TimeStamp`, `BattVolt`, `BattAmp`, `BattAMax`, `IP`\
+                        (`TIMEENTRY`, `BATTVOLT`, `BATTAMP`, `BATTAMAX`, `IP`\
                         ) VALUES(\
                         '"+str(self.date)+"', \
                         '"+str(round(self.battVoltSum/float(self.bcounter),3))+"','"+str(round(self.battAmpSum/float(self.bcounter),3))+"',\
@@ -285,7 +304,7 @@ class SQL_Logger:
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchone()
+                result = cursor.fetchall()
                 #print(sql)
                 self.bcounter = 0
                 self.battVoltSum = 0.

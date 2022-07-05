@@ -2,3 +2,7 @@ udp_topics:
  - name: "/odom/filtered"
    compress: false
    rate: 40.0
+
+ - name: "/map_pose/filtered"
+   compress: false
+   rate: 40.0
