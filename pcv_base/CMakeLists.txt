@@ -5,19 +5,6 @@ project(pcv_base)
 # add_compile_options(-std=c++11)
 set(CMAKE_CXX_STANDARD 17)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  omniveyor_common
-  geometry_msgs
-  nav_msgs
-  roscpp
-  rospy
-  std_msgs
-  sensor_msgs
-  tf
-)
 find_package(Eigen3 REQUIRED NO_MODULE)
 
 set(PCV_BASE_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake)
@@ -84,6 +71,20 @@ if(USE_OTG)
 			${PROJECT_SOURCE_DIR}/src/OTG.cc)
 	add_definitions(-DUSING_OTG)
 endif()
+
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED COMPONENTS
+  omniveyor_common
+  geometry_msgs
+  nav_msgs
+  roscpp
+  rospy
+  std_msgs
+  sensor_msgs
+  tf
+)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

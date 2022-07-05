@@ -76,8 +76,8 @@ void setCmd(const std_msgs::UInt16MultiArray& in_msg){
     }
 }
 
-ros::Publisher statusPub("gpio_get", &out_msg);
-ros::Subscriber<std_msgs::UInt16MultiArray> sub("gpio_set", &setCmd);
+ros::Publisher statusPub("gpio/get", &out_msg);
+ros::Subscriber<std_msgs::UInt16MultiArray> sub("gpio/set", &setCmd);
 
 void setup() {
     uint8_t i;
@@ -99,7 +99,7 @@ void setup() {
     nh.subscribe(sub);
 
     out_msg.layout.dim = (std_msgs::MultiArrayDimension *)malloc(sizeof(std_msgs::MultiArrayDimension));
-    out_msg.layout.dim[0].label = "gpio_states";
+    out_msg.layout.dim[0].label = "gpioStates";
     out_msg.layout.dim[0].size = out_msg_size;
     out_msg.layout.dim[0].stride = 1;
     out_msg.layout.data_offset = 0;

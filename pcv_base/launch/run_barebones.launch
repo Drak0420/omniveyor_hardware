@@ -9,6 +9,7 @@
 
     <arg name="front_rgbd" default="1"/>
     <arg name="rear_rgbd" default="1"/>
+    <arg name="visual_odom" default="1"/>
     <arg name="arduino_payload" default="1"/>
 
     <!-- Main control for the base, transformations, logging -->
@@ -19,6 +20,7 @@
         <arg name="teleop_namespace" value="$(arg teleop_namespace)"/>
         <arg name="teleop_rx_port"  value="$(arg teleop_rx_port)"/>
         <arg name="lidar_safeguard" value="true"/>
+        <arg name="logging"         value="false"/>
     </include>
 
     <!-- Laser scanner -->
@@ -33,7 +35,9 @@
     </group>
 
     <!-- Odometry (IMU, VO, ekf) -->
-    <include file="$(find pcv_base)/launch/includes/odom.launch" />
+    <include file="$(find pcv_base)/launch/includes/odom.launch">
+        <arg name="visual_odom" value="$(arg visual_odom)"/>
+    </include>
 
     <!-- serial port payload interface -->
     <group if="$(arg arduino_payload)">
