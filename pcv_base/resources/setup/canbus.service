@@ -5,7 +5,10 @@ After=multi-user.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStartPre=/sbin/ip link set can0 type can bitrate 1000000 triple-sampling on restart-ms 100
+ExecStartPre=/sbin/ip link set can0 type can bitrate 1000000 triple-sampling on restart-ms 100 txqueuelen 128
+ExecStartPre=/sbin/tc qdisc replace dev can0 root pfifo_fast
+# Refer to https://github.com/systemd/systemd/issues/9194 if can0 drops frames
+# ExecStartPre=/sbin/tc qdisc replace dev can0 root noqueue
 ExecStart=/sbin/ip link set can0 up
 ExecStop=/sbin/ip link set can0 down
 
