@@ -132,6 +132,7 @@ odom1_config: [true,  true,  true,
                false, false, false]
 odom1_differential: false
 odom1_relative: false
+odom1_pose_use_child_frame: true
 odom1_queue_size: 2
 odom1_pose_rejection_threshold: 5
 odom1_twist_rejection_threshold: 1
