@@ -740,6 +740,8 @@ heartbeat_timer_handler (union sigval val)
 		printf ("Resetting...100%% Motor response: type %x, param %x\r\n", e.type, e.param);
 		*/
 		flush_mQueue(m, 0);
+        /*
+         * TODO: Sometimes will not work... needs a full reset.
 		struct CO_message msg_nmt = {NMT, .m.NMT = {0x02}};
 		CO_send_message (m->s, m->no, &msg_nmt);
 		mq_receive (m->mQueue, (char *)&e, sizeof (e), NULL);
@@ -749,7 +751,18 @@ heartbeat_timer_handler (union sigval val)
 		mq_receive (m->mQueue, (char *)&e, sizeof (e), NULL);
 		printf ("Resetting... 100%% Motor response: type %x, param %x\r\n", e.type, e.param);
 		printf ("Motor controller %d reset completed!\r\n", m->no);
-		m->fault = false;
+		*/
+        enum ctrl_mode cm = m->cm;
+        // TODO: are these sufficient?
+        while (m->fault){
+			if (init_motor(m)!=0)
+				continue;
+			if (home_motor(m)!=0)
+				continue;
+			m->fault = false;
+		}
+        motor_set_ctrl_mode(m, cm);
+        
 		//if (m->enabled){
 		//	motor_enable(m);
 		//}
