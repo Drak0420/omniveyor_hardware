@@ -210,15 +210,15 @@ class SQL_Logger:
             with self.connection.cursor() as cursor:
                 # INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
                 #Casts all parameters to strings
-                sql = "INSERT INTO `"+self.dbName+"`.`" + self.navTableName + "` \
-                        (`TIMEENTRY`, `POSX`, `POSY`, `ORIENTATION`, \
-                        `VELX`, `VELY`, `ANGVEL`, \
-                        `DESX`, `DESY`, `DESORIENT`, `NAVSTATUS`\
-                        ) VALUES(\
-                        '"+str(self.date)+"', \
-                        '"+str(round(self.locX,4))+"','"+str(round(self.locY,4))+"','"+str(round(self.orientation,4))+"',\
-                        '"+str(round(self.velX,3))+"','"+str(round(self.velY,3))+"','"+str(round(self.angVel,3))+"',\
-                        '"+str(round(self.desX,4))+"','"+str(round(self.desY,4))+"','"+str(round(self.desOrient,4))+"','"+str(self.navState)+"');"
+                sql = "INSERT INTO "+self.dbName+"." + self.navTableName + \
+                        " (TIMEENTRY, POSX, POSY, ORIENTATION, \
+                        VELX, VELY, ANGVEL, \
+                        DESX, DESY, DESORIENT, NAVSTATUS\
+                        ) VALUES( TIMESTAMP '" + \
+                        str(self.date)+"'," + \
+                        str(round(self.locX,4))+","+str(round(self.locY,4))+","+str(round(self.orientation,4))+"," + \
+                        str(round(self.velX,3))+","+str(round(self.velY,3))+","+str(round(self.angVel,3))+"," + \
+                        str(round(self.desX,4))+","+str(round(self.desY,4))+","+str(round(self.desOrient,4))+","+str(self.navState)+");"
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
@@ -238,21 +238,21 @@ class SQL_Logger:
             with self.connection.cursor() as cursor:
                 # INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
                 #Casts all parameters to strings
-                sql = "INSERT INTO `"+self.dbName+"`.`" + self.motorTableName + "` \
-                        (`TIMEENTRY`, `STEER1AMP`, `ROLL1AMP`, `STEER2AMP`, \
-                        `ROLL2AMP`, `STEER3AMP`, `ROLL3AMP`, `STEER4AMP`, `ROLL4AMP`, \
-                        `STEER1AMAX`, `ROLL1AMAX`, `STEER2AMAX`, `ROLL2AMAX`, \
-                        `STEER3AMAX`, `ROLL3AMAX`, `STEER4AMAX`, `ROLL4AMAX`\
-                        ) VALUES(\
-                        '"+str(self.date)+"',\
-                        '"+str(round(self.steer_1_Amp_Sum/float(self.counter),3))+"','"+str(round(self.roll_1_Amp_Sum/float(self.counter),3))+"', \
-                        '"+str(round(self.steer_2_Amp_Sum/float(self.counter),3))+"','"+str(round(self.roll_2_Amp_Sum/float(self.counter),3))+"', \
-                        '"+str(round(self.steer_3_Amp_Sum/float(self.counter),3))+"','"+str(round(self.roll_3_Amp_Sum/float(self.counter),3))+"', \
-                        '"+str(round(self.steer_4_Amp_Sum/float(self.counter),3))+"','"+str(round(self.roll_4_Amp_Sum/float(self.counter),3))+"', \
-                        '"+str(round(self.s1AMax,3))+"','"+str(round(self.r1AMax,3))+"', \
-                        '"+str(round(self.s2AMax,3))+"','"+str(round(self.r2AMax,3))+"', \
-                        '"+str(round(self.s3AMax,3))+"','"+str(round(self.r3AMax,3))+"', \
-                        '"+str(round(self.s4AMax,3))+"','"+str(round(self.r4AMax,3))+"');"
+                sql = "INSERT INTO "+self.dbName+"." + self.motorTableName + \
+                        " (TIMEENTRY, STEER1AMP, ROLL1AMP, STEER2AMP, \
+                        ROLL2AMP, STEER3AMP, ROLL3AMP, STEER4AMP, ROLL4AMP, \
+                        STEER1AMAX, ROLL1AMAX, STEER2AMAX, ROLL2AMAX, \
+                        STEER3AMAX, ROLL3AMAX, STEER4AMAX, ROLL4AMAX\
+                        ) VALUES( TIMESTAMP '" + \
+                        str(self.date)+"'," + \
+                        str(round(self.steer_1_Amp_Sum/float(self.counter),3))+","+str(round(self.roll_1_Amp_Sum/float(self.counter),3))+"," + \
+                        str(round(self.steer_2_Amp_Sum/float(self.counter),3))+","+str(round(self.roll_2_Amp_Sum/float(self.counter),3))+"," + \
+                        str(round(self.steer_3_Amp_Sum/float(self.counter),3))+","+str(round(self.roll_3_Amp_Sum/float(self.counter),3))+"," + \
+                        str(round(self.steer_4_Amp_Sum/float(self.counter),3))+","+str(round(self.roll_4_Amp_Sum/float(self.counter),3))+"," + \
+                        str(round(self.s1AMax,3))+","+str(round(self.r1AMax,3))+"," + \
+                        str(round(self.s2AMax,3))+","+str(round(self.r2AMax,3))+"," + \
+                        str(round(self.s3AMax,3))+","+str(round(self.r3AMax,3))+"," + \
+                        str(round(self.s4AMax,3))+","+str(round(self.r4AMax,3))+");"
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
@@ -313,12 +313,12 @@ class SQL_Logger:
         try:
             with self.connection.cursor() as cursor:
                 # INSERT INTO [TABLE NAME] (COLUMN NAME) VALUE(value1, value2)...
-                sql = "INSERT INTO `"+self.dbName+"`.`" + self.telemetryTableName + "` \
-                        (`TIMEENTRY`, `BATTVOLT`, `BATTAMP`, `BATTAMAX`, `IP`\
-                        ) VALUES(\
-                        '"+str(self.date)+"', \
-                        '"+str(round(self.battVoltSum/float(self.bcounter),3))+"','"+str(round(self.battAmpSum/float(self.bcounter),3))+"',\
-                        '"+str(round(self.battAMax,3))+"','"+self.robot_ip+"');"
+                sql = "INSERT INTO "+self.dbName+"." + self.telemetryTableName + \
+                        " (TIMEENTRY, BATTVOLT, BATTAMP, BATTAMAX, IP\
+                        ) VALUES( TIMESTAMP '" + \
+                        str(self.date)+"',"+ \
+                        str(round(self.battVoltSum/float(self.bcounter),3))+","+str(round(self.battAmpSum/float(self.bcounter),3))+"," + \
+                        str(round(self.battAMax,3))+",'"+self.robot_ip+"');"
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
