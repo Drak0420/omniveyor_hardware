@@ -218,7 +218,7 @@ class SQL_Logger:
                         str(self.date)+"'," + \
                         str(round(self.locX,4))+","+str(round(self.locY,4))+","+str(round(self.orientation,4))+"," + \
                         str(round(self.velX,3))+","+str(round(self.velY,3))+","+str(round(self.angVel,3))+"," + \
-                        str(round(self.desX,4))+","+str(round(self.desY,4))+","+str(round(self.desOrient,4))+","+str(self.navState)+");"
+                        str(round(self.desX,4))+","+str(round(self.desY,4))+","+str(round(self.desOrient,4))+","+str(self.navState)+")"
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
@@ -226,8 +226,8 @@ class SQL_Logger:
                 #print(sql)
                 self.newNavStat = False
             # print("INFO: Nav data uploaded!")
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             #print("db..navigation")
             self.connection.commit()
@@ -252,7 +252,7 @@ class SQL_Logger:
                         str(round(self.s1AMax,3))+","+str(round(self.r1AMax,3))+"," + \
                         str(round(self.s2AMax,3))+","+str(round(self.r2AMax,3))+"," + \
                         str(round(self.s3AMax,3))+","+str(round(self.r3AMax,3))+"," + \
-                        str(round(self.s4AMax,3))+","+str(round(self.r4AMax,3))+");"
+                        str(round(self.s4AMax,3))+","+str(round(self.r4AMax,3))+")"
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
@@ -277,8 +277,8 @@ class SQL_Logger:
                 self.r3AMax = 0.
                 self.r4AMax = 0.
             # print("INFO: Motor data uploaded!")
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             #print("db..battery")
             self.connection.commit()
@@ -302,8 +302,8 @@ class SQL_Logger:
                 #print(sql)
                 """
                 self.newPayloadStat = False
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             #print("db..navigation")
             self.connection.commit()
@@ -318,7 +318,7 @@ class SQL_Logger:
                         ) VALUES( TIMESTAMP '" + \
                         str(self.date)+"',"+ \
                         str(round(self.battVoltSum/float(self.bcounter),3))+","+str(round(self.battAmpSum/float(self.bcounter),3))+"," + \
-                        str(round(self.battAMax,3))+",'"+self.robot_ip+"');"
+                        str(round(self.battAMax,3))+",'"+self.robot_ip+"')"
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
@@ -328,8 +328,8 @@ class SQL_Logger:
                 self.battAmpSum = 0.
                 self.battAMax = 0.
             # print("INFO: Telemetry uploaded!")
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             #print("db..navigation")
             self.connection.commit()
