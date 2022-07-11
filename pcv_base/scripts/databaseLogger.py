@@ -1,15 +1,20 @@
 #!/usr/bin/env python
+
 #import requests
 #from payload import payload  #Used to get UVC lamp data
+
 # if using mysql
-#import pymysql.cursors
+import pymysql
+
 # if using oracle sql
-import cx_Oracle
+import oracledb
+
 from datetime import datetime
 import time
 import netifaces as ni
 from tf import transformations as ts
 import os
+import sys
 from omniveyor_common.msg import *
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
@@ -17,11 +22,20 @@ import rospy
 import numpy as np
 from datetime import datetime
 import xml.etree.ElementTree as ET
-from move_base_msgs.msg import MoveBaseActionResult 
+from move_base_msgs.msg import MoveBaseActionResult
+import rospkg
 
 class SQL_Logger:
-    def __init__(self):
-        db_cred = ET.parse('/home/cartman/Dev/dbCredentials.xml')
+    def __init__(self, credPath, dbType='oracle'):
+
+        self.electricalStatusTopic = rospy.get_param('~electrical_status_topic', 'electricalStatus')
+        self.payloadStatusTopic = rospy.get_param('~payload_status_topic', 'payloadStatus')
+        self.mapPoseTopic = rospy.get_param('~map_pose_topic', 'map_pose/filtered')
+        self.odomTopic = rospy.get_param('~odom_topic', 'odom/filtered')
+        self.goalTopic = rospy.get_param('~goal_topic', 'move_base_simple/goal')
+        self.resultTopic = rospy.get_param('~result_topic', 'move_base/result')
+
+        db_cred = ET.parse(credPath)
         
         self.dbName = db_cred.findall('databaseName')[0].get('value')
         thisNode = os.getenv('NODE_NO')
@@ -30,25 +44,27 @@ class SQL_Logger:
         self.payloadTableName = 'CARTMAN'+(thisNode.zfill(2))+'_PAYLOAD'        #db_cred.findall('payloadTableName')[0].get('value')
         self.telemetryTableName = 'CARTMAN'+(thisNode.zfill(2))+'_TELEMETRY'    #db_cred.findall('telemetryTableName')[0].get('value')
         
-        # for mysql
-        """
-        server = db_cred.findall('server')[0].get('value')
-        portNo = db_cred.findall('port')
-        if len(portNo)>0:
-            portNo = int(portNo[0].get('value'))
+        print("INFO: Connecting to logging database...")
+        if (dbType == "oracle"):
+            # for oracle sql
+            connection_config = str(db_cred.findall('connection_config')[0].get('value'))
+            usrname = db_cred.findall('user')[0].get('value')
+            passwd = db_cred.findall('password')[0].get('value')
+            self.connection = oracledb.connect(user=usrname, password=passwd, dsn=connection_config, encoding="UTF-8")
+        elif (dbType == "mysql"):
+            # for mysql
+            server = db_cred.findall('server')[0].get('value')
+            portNo = db_cred.findall('port')
+            if len(portNo)>0:
+                portNo = int(portNo[0].get('value'))
+            else:
+                portNo = 3306
+            usrname = db_cred.findall('user')[0].get('value')
+            passwd = db_cred.findall('password')[0].get('value')
+            self.connection = pymysql.connect(host=server, port=portNo, user=usrname, password=passwd, database=self.dbName)    # Fill in your credentials
         else:
-            portNo = 3306
-        usrname = db_cred.findall('user')[0].get('value')
-        passwd = db_cred.findall('password')[0].get('value')
-        self.connection = pymysql.connect(host=server, port=portNo, user=usrname, password=passwd, database=self.dbName)    # Fill in your credentials  
-        """
-
-        # for oracle sql
-        connection_config = db_cred.findall('connection_config')[0].get('value')
-        usrname = db_cred.findall('user')[0].get('value')
-        passwd = db_cred.findall('password')[0].get('value')
-        self.connection = cx_Oracle.connect(user=usrname,password=passwd,dsn=connection_config,
-                                            encoding="UTF-8")
+            sys.exit("ERROR: Unknown Database Type!")
+        print("INFO: Logging database Connected!")
 
         self.UTC_OFFSET_TIMEDELTA = datetime.utcnow() - datetime.now()
 
@@ -115,7 +131,7 @@ class SQL_Logger:
         ifaces = ni.interfaces()
         wlan_name = ''
         for item in ifaces:
-            if 'wlx' in item:
+            if item.startswith('wl'):
                 wlan_name = item
                 break
         self.robot_ip = ni.ifaddresses(wlan_name)[ni.AF_INET][0]['addr']
@@ -206,9 +222,10 @@ class SQL_Logger:
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchall()
+                result = cursor.fetchone()
                 #print(sql)
                 self.newNavStat = False
+            # print("INFO: Nav data uploaded!")
         except:
             pass
         finally:
@@ -239,7 +256,7 @@ class SQL_Logger:
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchall()
+                result = cursor.fetchone()
                 #print(sql)
                 
                 self.counter = 0
@@ -259,6 +276,7 @@ class SQL_Logger:
                 self.r2AMax = 0.
                 self.r3AMax = 0.
                 self.r4AMax = 0.
+            # print("INFO: Motor data uploaded!")
         except:
             pass
         finally:
@@ -280,7 +298,7 @@ class SQL_Logger:
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchall()
+                result = cursor.fetchone()
                 #print(sql)
                 """
                 self.newPayloadStat = False
@@ -304,12 +322,12 @@ class SQL_Logger:
                 
                 #cursor.execute(sql, vals)
                 cursor.execute(sql)
-                result = cursor.fetchall()
-                #print(sql)
+                result = cursor.fetchone()
                 self.bcounter = 0
                 self.battVoltSum = 0.
                 self.battAmpSum = 0.
                 self.battAMax = 0.
+            # print("INFO: Telemetry uploaded!")
         except:
             pass
         finally:
@@ -320,12 +338,12 @@ class SQL_Logger:
 
     def run(self):
         rospy.init_node("database_logger")
-        rospy.Subscriber("electricalStatus", electricalStatus, self.electrical_cb)
-        rospy.Subscriber("payloadStatus", payloadStatus, self.payload_cb)
-        rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, self.localization_cb)
-        rospy.Subscriber("odom", Odometry, self.odom_cb)
-        rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.navTarget_cb)
-        rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.navStatus_cb)
+        rospy.Subscriber(self.electricalStatusTopic, electricalStatus, self.electrical_cb)
+        rospy.Subscriber(self.payloadStatusTopic, payloadStatus, self.payload_cb)
+        rospy.Subscriber(self.mapPoseTopic, PoseWithCovarianceStamped, self.localization_cb)
+        rospy.Subscriber(self.odomTopic, Odometry, self.odom_cb)
+        rospy.Subscriber(self.goalTopic, PoseStamped, self.navTarget_cb)
+        rospy.Subscriber(self.resultTopic, MoveBaseActionResult, self.navStatus_cb)
         
         while not rospy.is_shutdown():
             self.date = datetime.utcnow() #datetime.now()
@@ -353,7 +371,8 @@ class SQL_Logger:
            
 
 if __name__ == "__main__":
-    dbLogger = SQL_Logger()
+    dbType = rospy.get_param('~db_type', 'oracle')
+    credentialPath = rospy.get_param('~credential_path', rospkg.RosPack().get_path('pcv_base')+'/../../../dbCredentials.xml')
+    dbLogger = SQL_Logger(credentialPath, dbType)
+    #print("Initialized!")
     dbLogger.run()
-    
-
