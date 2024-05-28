@@ -23,25 +23,24 @@ def debounce(interval):
 
 
 class joystickTeleop:
-    CMD_HELP = """
-                    CONTROLS
-___________________________________________________
-LJoy: Normal operation - moves f/b w/ rotation to sides
-RJoy: Strafe - moves in direction w/o rotation
-L2: Rotate Left
-R2: Rotate Right
-DPad
-    Up: Increase global speed by 10%
-    Down: Decrease global speed by 10%
-    Right: Increase rotation speed by 10%
-    Left: Decrease rotation speed by 10%
-    
-OPTION: Enable/Disable motors
-Circle: Enable/Disable rotation with left joystick
-Cross: Help Menu
-Triangle: Send trigger message to goal publisher
-            Requires a node to recieve msg!
-"""
+    CMD_HELP = (
+        "CONTROLS\n\r"
+        "___________________________________________________\n\r"
+        "LJoy: Normal operation - moves f/b w/ rotation to side\n\r"
+        "RJoy: Strafe - moves in direction w/o rotation\n\r"
+        "L2: Rotate Left\n\r"
+        "R2: Rotate Right\n\r"
+        "DPad\n\r"
+        "\tUp: Increase global speed by 10%\n\r"
+        "\tDown: Decrease global speed by 10%\n\r"
+        "\tRight: Increase rotation speed by 10%\n\r"
+        "\tLeft: Decrease rotation speed by 10%\n\r"
+        "OPTION: Enable/Disable motors\n\r"
+        "Circle: Enable/Disable rotation with left joystick\n\r"
+        "Cross: Help Menu\n\r"
+        "Triangle: Send trigger message to goal publisher\n\r"
+        "\t\tRequires a node to recieve msg!\n\r"
+    )
 
     def __init__(self):
         rospy.Subscriber("joy", Joy, self.joy_cb)
@@ -109,7 +108,9 @@ Triangle: Send trigger message to goal publisher
 
         if cross:
             print(self.CMD_HELP)
-        # print(self.status())
+        status = self.status()
+        if status != None:
+            print(status, end="\n\r")
         # rospy.logdebug(self.debug_msg(msg, cmd))
 
     def main(self):
@@ -165,13 +166,15 @@ Triangle: Send trigger message to goal publisher
 
     @debounce(1)
     def status(self):
-        return "Motors enabled:{motor_ena} \
-        Left Joystick Turn Enabled:{ljoy_ena} \
-        Vel: speed {speed:.4f}\tturn {turn:.4f}\n".format(
-            motor_ena=self.ena,
-            ljoy_ena=self.en_ljoy_hort,
-            speed=self.speed,
-            turn=self.turn,
+        return (
+            "Motors enabled: "
+            + str(self.ena)
+            + "  Left Joystick Turn Enabled: "
+            + str(self.en_ljoy_hort)
+            + "  Vel: speed {speed:.4f} turn {turn:.4f}".format(
+                speed=self.speed,
+                turn=self.turn,
+            )
         )
 
     def base_disable(self):
