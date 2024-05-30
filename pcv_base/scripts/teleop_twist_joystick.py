@@ -5,6 +5,7 @@ import rospy
 from std_msgs.msg import Byte, Empty
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
+from actionlib_msgs.msg import GoalID
 
 
 def debounce(interval):
@@ -39,23 +40,29 @@ class joystickTeleop:
         "Circle: Enable/Disable rotation with left joystick\n\r"
         "Cross: Help Menu\n\r"
         "Triangle: Send trigger message to goal publisher\n\r"
+        "Square: Cancel current goal\n\r"
         "\t\tRequires a node to recieve msg!\n\r"
     )
 
     def __init__(self):
-        rospy.Subscriber("joy", Joy, self.joy_cb)
-        self.vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
-        self.ena_pub = rospy.Publisher("control_mode", Byte, queue_size=1)
-        self.goal_trig_pub = rospy.Publisher("/aruco_goal_send", Empty, queue_size=1)
         self.speed = float(rospy.get_param("~speed", 0.5))
         self.turn = float(rospy.get_param("~turn", 1.0))
         self.ena = False
         self.en_ljoy_hort = True
         self.speed_line_written = 1
-        self.prev_option = 0.0
+        self.prev_option = 0
         self.prev_circle = 0
         self.prev_triangle = 0
+        self.prev_square = 0
         self.scaling_factor = {-1.0: 0.9, 1.0: 1.1}
+
+        self.vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
+        self.ena_pub = rospy.Publisher("control_mode", Byte, queue_size=1)
+        self.goal_trig_pub = rospy.Publisher("/goal_send_trigger", Empty, queue_size=1)
+        self.goal_cancel_pub = rospy.Publisher(
+            "/move_base/cancel", GoalID, queue_size=1
+        )
+        rospy.Subscriber("joy", Joy, self.joy_cb)
         rospy.on_shutdown(self.shutdown)
 
     def joy_cb(self, msg):
@@ -83,7 +90,8 @@ class joystickTeleop:
         # set params before movement
         self.button_press(option, "prev_option", "ena", None, self.toggle_base)
         self.button_press(circle, "prev_circle", "en_ljoy_hort")
-        self.button_press(triangle, "prev_triangle", None, None, self.send_goal_trigger)
+        self.button_press(triangle, "prev_triangle", None, self.send_goal_trigger)
+        self.button_press(square, "prev_square", None, self.cancel_goal)
         if dpad_hort or dpad_vert:
             self.update_speed_and_turn(dpad_hort, dpad_vert)
 
@@ -107,10 +115,10 @@ class joystickTeleop:
         self.vel_pub.publish(cmd)
 
         if cross:
-            print(self.CMD_HELP)
+            rospy.loginfo(self.CMD_HELP)
         status = self.status()
         if status != None:
-            print(status, end="\n\r")
+            rospy.loginfo(status)
         # rospy.logdebug(self.debug_msg(msg, cmd))
 
     def main(self):
@@ -139,9 +147,10 @@ class joystickTeleop:
         if curr_value != getattr(self, prev_attr):
             setattr(self, prev_attr, curr_value)
             # Low -> High State change
-            if curr_value == 1 and toggle_attr:
-                toggle_value = getattr(self, toggle_attr)
-                setattr(self, toggle_attr, not toggle_value)
+            if curr_value == 1:
+                if toggle_attr:
+                    toggle_value = getattr(self, toggle_attr)
+                    setattr(self, toggle_attr, not toggle_value)
                 if hilow_trig_func:
                     hilow_trig_func()
             if toggle_func:
@@ -164,14 +173,14 @@ class joystickTeleop:
             + str(cmd)
         )
 
-    @debounce(1)
+    @debounce(0.1)
     def status(self):
         return (
             "Motors enabled: "
             + str(self.ena)
             + "  Left Joystick Turn Enabled: "
             + str(self.en_ljoy_hort)
-            + "  Vel: speed {speed:.4f} turn {turn:.4f}".format(
+            + "  Vel: speed {speed:.4f} turn {turn:.4f}\r".format(
                 speed=self.speed,
                 turn=self.turn,
             )
@@ -191,6 +200,9 @@ class joystickTeleop:
 
     def send_goal_trigger(self):
         self.goal_trig_pub.publish(Empty())
+
+    def cancel_goal(self):
+        self.goal_cancel_pub.publish(GoalID())
 
     def shutdown(self):
         self.base_disable()
