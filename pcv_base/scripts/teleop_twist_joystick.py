@@ -2,10 +2,12 @@
 
 import time
 import rospy
-from std_msgs.msg import Byte, Empty
-from sensor_msgs.msg import Joy
-from geometry_msgs.msg import Twist
+
 from actionlib_msgs.msg import GoalID
+from geometry_msgs.msg import Twist
+from omniveyor_common.msg import electricalStatus
+from sensor_msgs.msg import Joy
+from std_msgs.msg import Byte, Empty
 
 
 def debounce(interval):
@@ -63,6 +65,7 @@ class joystickTeleop:
             "/move_base/cancel", GoalID, queue_size=1
         )
         rospy.Subscriber("joy", Joy, self.joy_cb)
+        rospy.Subscriber("electrical_status", electricalStatus, self.status_cb)
         rospy.on_shutdown(self.shutdown)
 
     def joy_cb(self, msg):
@@ -121,6 +124,10 @@ class joystickTeleop:
             rospy.loginfo(status)
         # rospy.logdebug(self.debug_msg(msg, cmd))
 
+    def status_cb(self, msg):
+        # Only run log every x seconds to avoid spam
+        debounce(0.25)(rospy.loginfo(str(msg)))()
+
     def main(self):
         # enable the robot and enters velocity mode
         self.base_enable()
@@ -173,7 +180,7 @@ class joystickTeleop:
             + str(cmd)
         )
 
-    @debounce(0.1)
+    @debounce(0.25)
     def status(self):
         return (
             "Motors enabled: "
@@ -199,9 +206,11 @@ class joystickTeleop:
             self.base_disable()
 
     def send_goal_trigger(self):
+        rospy.loginfo("Sent goal trigger message\n\r")
         self.goal_trig_pub.publish(Empty())
 
     def cancel_goal(self):
+        rospy.loginfo("Sent cancel message\n\r")
         self.goal_cancel_pub.publish(GoalID())
 
     def shutdown(self):
