@@ -78,7 +78,7 @@ class joystickTeleop:
             "initialpose", PoseWithCovarianceStamped, queue_size=1
         )
         rospy.Subscriber("joy", Joy, self.joy_cb)
-        rospy.Subscriber("electrical_status", electricalStatus, self.status_cb)
+        rospy.Subscriber("electricalStatus", electricalStatus, self.status_cb)
         rospy.on_shutdown(self.shutdown)
 
     def joy_cb(self, msg):
@@ -138,9 +138,17 @@ class joystickTeleop:
             rospy.loginfo(status)
         # print(self.debug_msg(msg, cmd))
 
+    @debounce(5)
     def status_cb(self, msg):
         # Only run log every x seconds to avoid spam
-        debounce(0.25)(rospy.loginfo(str(msg)))()
+        info_msg = (
+            "Voltages\n\r"
+            f"Steering: {round(msg.steer_1_Volt, 3)} {round(msg.steer_2_Volt, 3)}"
+            f" {round(msg.steer_3_Volt, 3)} {round(msg.steer_4_Volt, 3)}\n\r"
+            f"Roll: {round(msg.roll_1_Volt, 3)} {round(msg.roll_2_Volt, 3)} "
+            f"{round(msg.roll_3_Volt, 3)} {round(msg.roll_4_Volt, 3)}\n\r"
+        )
+        rospy.loginfo(info_msg)
 
     def main(self):
         # enable the robot and enters velocity mode
@@ -194,7 +202,7 @@ class joystickTeleop:
             + str(cmd)
         )
 
-    @debounce(0.25)
+    @debounce(0.5)
     def status(self):
         return (
             "Motors enabled: "
@@ -228,11 +236,11 @@ class joystickTeleop:
             self.base_disable()
 
     def send_goal_trigger(self):
-        rospy.loginfo("Sent goal trigger message\n\r")
+        rospy.loginfo("Sent goal trigger message\r")
         self.goal_trig_pub.publish(Empty())
 
     def cancel_goal(self):
-        rospy.loginfo("Sent cancel message\n\r")
+        rospy.loginfo("Sent cancel message\r")
         self.goal_cancel_pub.publish(GoalID())
 
     def shutdown(self):
