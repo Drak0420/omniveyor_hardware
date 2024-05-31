@@ -36,6 +36,7 @@ class joystickTeleop:
     CMD_HELP = (
         "CONTROLS\n\r"
         "___________________________________________________\n\r"
+        "L1 and R1: One must be held down while manually manuveuring\n\r"
         "LJoy: Normal operation - moves f/b w/ rotation to side\n\r"
         "RJoy: Strafe - moves in direction w/o rotation\n\r"
         "L2: Rotate Left\n\r"
@@ -111,7 +112,7 @@ class joystickTeleop:
         if dpad_hort or dpad_vert:
             self.update_speed_and_turn(dpad_hort, dpad_vert)
 
-        if self.ena:
+        if self.ena and (l1 or r1):
             x = ljoy_vert / 2 + rjoy_vert / 2
             y = rjoy_hort / 2  # divide by 2 for consistency
             omega = ljoy_hort * self.en_ljoy_hort
@@ -135,7 +136,7 @@ class joystickTeleop:
         status = self.status()
         if status != None:
             rospy.loginfo(status)
-        # rospy.logdebug(self.debug_msg(msg, cmd))
+        # print(self.debug_msg(msg, cmd))
 
     def status_cb(self, msg):
         # Only run log every x seconds to avoid spam
