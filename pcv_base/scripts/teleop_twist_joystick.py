@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 
 import time
-import rospy
 
+import rospy
 from actionlib_msgs.msg import GoalID
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import (
+    Point,
+    Pose,
+    PoseWithCovariance,
+    PoseWithCovarianceStamped,
+    Quaternion,
+    Twist,
+)
 from omniveyor_common.msg import electricalStatus
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Byte, Empty
@@ -39,11 +46,12 @@ class joystickTeleop:
         "\tRight: Increase rotation speed by 10%\n\r"
         "\tLeft: Decrease rotation speed by 10%\n\r"
         "OPTION: Enable/Disable motors\n\r"
-        "Circle: Enable/Disable rotation with left joystick\n\r"
+        "Left Joystick Press: Enable/Disable rotation with left joystick\n\r"
+        "Share: Reset robot to initial position in software\n\r"
+        "\t\tRequires manual manuveur to desired location first!\n\r"
         "Cross: Help Menu\n\r"
-        "Triangle: Send trigger message to goal publisher\n\r"
+        "Triangle: Send trigger message to goal sender node\n\r"
         "Square: Cancel current goal\n\r"
-        "\t\tRequires a node to recieve msg!\n\r"
     )
 
     def __init__(self):
@@ -53,7 +61,8 @@ class joystickTeleop:
         self.en_ljoy_hort = True
         self.speed_line_written = 1
         self.prev_option = 0
-        self.prev_circle = 0
+        self.prev_ljoy_press = 0
+        self.prev_share = 0
         self.prev_triangle = 0
         self.prev_square = 0
         self.scaling_factor = {-1.0: 0.9, 1.0: 1.1}
@@ -63,6 +72,9 @@ class joystickTeleop:
         self.goal_trig_pub = rospy.Publisher("/goal_send_trigger", Empty, queue_size=1)
         self.goal_cancel_pub = rospy.Publisher(
             "/move_base/cancel", GoalID, queue_size=1
+        )
+        self.reset_pose_pub = rospy.Publisher(
+            "initialpose", PoseWithCovarianceStamped, queue_size=1
         )
         rospy.Subscriber("joy", Joy, self.joy_cb)
         rospy.Subscriber("electrical_status", electricalStatus, self.status_cb)
@@ -92,7 +104,8 @@ class joystickTeleop:
 
         # set params before movement
         self.button_press(option, "prev_option", "ena", None, self.toggle_base)
-        self.button_press(circle, "prev_circle", "en_ljoy_hort")
+        self.button_press(ljoy_press, "prev_ljoy_press", "en_ljoy_hort")
+        self.button_press(share, "prev_share", None, self.reset_pose)
         self.button_press(triangle, "prev_triangle", None, self.send_goal_trigger)
         self.button_press(square, "prev_square", None, self.cancel_goal)
         if dpad_hort or dpad_vert:
@@ -192,6 +205,14 @@ class joystickTeleop:
                 turn=self.turn,
             )
         )
+
+    def reset_pose(self):
+        msg = PoseWithCovarianceStamped()
+        msg.pose = PoseWithCovariance(pose=Pose(Point(0, 0, 0), Quaternion(0, 0, 0, 1)))
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = "map"
+        self.reset_pose_pub.publish(msg)
+        return
 
     def base_disable(self):
         self.ena_pub.publish(Byte(0))
