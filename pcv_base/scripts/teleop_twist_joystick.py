@@ -146,7 +146,7 @@ class joystickTeleop:
             f"Steering: {round(msg.steer_1_Volt, 3)} {round(msg.steer_2_Volt, 3)}"
             f" {round(msg.steer_3_Volt, 3)} {round(msg.steer_4_Volt, 3)}\n\r"
             f"Roll: {round(msg.roll_1_Volt, 3)} {round(msg.roll_2_Volt, 3)} "
-            f"{round(msg.roll_3_Volt, 3)} {round(msg.roll_4_Volt, 3)}\n\r"
+            f"{round(msg.roll_3_Volt, 3)} {round(msg.roll_4_Volt, 3)}\r"
         )
         rospy.loginfo(info_msg)
 
@@ -221,6 +221,7 @@ class joystickTeleop:
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = "map"
         self.reset_pose_pub.publish(msg)
+        rospy.loginfo("Sent pose reset command \r")
         return
 
     def base_disable(self):
