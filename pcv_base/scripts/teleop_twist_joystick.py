@@ -66,6 +66,7 @@ class joystickTeleop:
         self.prev_share = 0
         self.prev_triangle = 0
         self.prev_square = 0
+        self.prev_status = ""
         self.scaling_factor = {-1.0: 0.9, 1.0: 1.1}
 
         self.vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
@@ -133,12 +134,15 @@ class joystickTeleop:
 
         if cross:
             rospy.loginfo(self.CMD_HELP)
+
+        # Only print status if new status
         status = self.status()
         if status != None:
             rospy.loginfo(status)
+            self.prev_stats = status
         # print(self.debug_msg(msg, cmd))
 
-    @debounce(5)
+    @debounce(30)
     def status_cb(self, msg):
         # Only run log every x seconds to avoid spam
         info_msg = (
@@ -202,9 +206,8 @@ class joystickTeleop:
             + str(cmd)
         )
 
-    @debounce(0.5)
     def status(self):
-        return (
+        msg = (
             "Motors enabled: "
             + str(self.ena)
             + "  Left Joystick Turn Enabled: "
@@ -214,6 +217,9 @@ class joystickTeleop:
                 turn=self.turn,
             )
         )
+        if msg != self.prev_status:
+            self.prev_status = msg
+            return msg
 
     def reset_pose(self):
         msg = PoseWithCovarianceStamped()
