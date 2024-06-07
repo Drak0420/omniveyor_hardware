@@ -14,7 +14,7 @@ from geometry_msgs.msg import (
 )
 from omniveyor_common.msg import electricalStatus
 from sensor_msgs.msg import Joy
-from std_msgs.msg import Byte, Empty
+from std_msgs.msg import Byte, Empty, Int8
 
 
 def debounce(interval):
@@ -60,18 +60,12 @@ class joystickTeleop:
         self.turn = float(rospy.get_param("~turn", 1.0))
         self.ena = False
         self.en_ljoy_hort = True
-        self.speed_line_written = 1
-        self.prev_option = 0
-        self.prev_ljoy_press = 0
-        self.prev_share = 0
-        self.prev_triangle = 0
-        self.prev_square = 0
-        self.prev_status = ""
         self.scaling_factor = {-1.0: 0.9, 1.0: 1.1}
+        self.prev_states = {}
 
         self.vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
         self.ena_pub = rospy.Publisher("control_mode", Byte, queue_size=1)
-        self.goal_trig_pub = rospy.Publisher("/goal_send_trigger", Empty, queue_size=1)
+        self.goal_trig_pub = rospy.Publisher("/goal_send_trigger", Int8, queue_size=1)
         self.goal_cancel_pub = rospy.Publisher(
             "/move_base/cancel", GoalID, queue_size=1
         )
@@ -104,21 +98,24 @@ class joystickTeleop:
         ) = msg.buttons
         x = y = omega = 0
 
-        # set params before movement
-        self.button_press(option, "prev_option", "ena", None, self.toggle_base)
-        self.button_press(ljoy_press, "prev_ljoy_press", "en_ljoy_hort")
-        self.button_press(share, "prev_share", None, self.reset_pose)
-        self.button_press(triangle, "prev_triangle", None, self.send_goal_trigger)
-        self.button_press(square, "prev_square", None, self.cancel_goal)
+        self.button_press(option, "option", self.toggle_base)
+        self.button_press(ljoy_press, "ljoy_press", self.toggle_value, "en_ljoy_hort")
+        self.button_press(share, "share", self.reset_pose)
+        self.button_press(triangle, "triangle", self.send_goal_trigger, 0)
+        self.button_press(circle, "circle", self.send_goal_trigger, 1)
+        self.button_press(cross, "cross", self.send_goal_trigger, 2)
+        self.button_press(square, "square", self.cancel_goal)
+        self.button_press(ps_logo, "ps_logo", rospy.loginfo, self.CMD_HELP)
         if dpad_hort or dpad_vert:
             self.update_speed_and_turn(dpad_hort, dpad_vert)
 
+        # Move if enabled movement & deadman engaged
         if self.ena and (l1 or r1):
             x = ljoy_vert / 2 + rjoy_vert / 2
             y = rjoy_hort / 2  # divide by 2 for consistency
             omega = ljoy_hort * self.en_ljoy_hort
 
-            # XX_en used to prevent depressed non-zero states
+            # XX_en used to prevent non-zero states when not actuated
             if l2_en:
                 omega += -(l2 - 1) / 2
             if r2_en:
@@ -128,12 +125,8 @@ class joystickTeleop:
         cmd = Twist()
         cmd.linear.x = self.speed * x
         cmd.linear.y = self.speed * y
-        cmd.linear.z = cmd.angular.x = cmd.angular.y = 0
         cmd.angular.z = self.turn * omega
         self.vel_pub.publish(cmd)
-
-        if cross:
-            rospy.loginfo(self.CMD_HELP)
 
         # Only print status if new status
         status = self.status()
@@ -155,19 +148,11 @@ class joystickTeleop:
         rospy.loginfo(info_msg)
 
     def main(self):
-        # enable the robot and enters velocity mode
-        self.base_enable()
+        self.base_disable()
         rospy.spin()
         self.base_disable()
 
-    def button_press(
-        self,
-        curr_value,
-        prev_attr,
-        toggle_attr=None,
-        hilow_trig_func=None,
-        toggle_func=None,
-    ):
+    def button_press(self, curr_value, prev_attr, func, *args):
         """
         Function to get trigger states from buttons
 
@@ -177,17 +162,15 @@ class joystickTeleop:
         :param hilow_trig_func: Function to run on button press
         :param toggle_func: Function to run on button press and depress
         """
-        if curr_value != getattr(self, prev_attr):
-            setattr(self, prev_attr, curr_value)
-            # Low -> High State change
+        prev_state = self.prev_states.get(prev_attr)
+        if curr_value != prev_state:
+            self.prev_states[prev_attr] = curr_value
             if curr_value == 1:
-                if toggle_attr:
-                    toggle_value = getattr(self, toggle_attr)
-                    setattr(self, toggle_attr, not toggle_value)
-                if hilow_trig_func:
-                    hilow_trig_func()
-            if toggle_func:
-                toggle_func()
+                func(*args)
+
+    def toggle_value(self, toggle_attr):
+        toggle_value = getattr(self, toggle_attr)
+        setattr(self, toggle_attr, not toggle_value)
 
     @debounce(0.1)
     def update_speed_and_turn(self, dpad_hort, dpad_vert):
@@ -217,8 +200,9 @@ class joystickTeleop:
                 turn=self.turn,
             )
         )
-        if msg != self.prev_status:
-            self.prev_status = msg
+        prev_status = self.prev_states.get("status")
+        if msg != prev_status:
+            self.prev_states["status"] = msg
             return msg
 
     def reset_pose(self):
@@ -237,14 +221,15 @@ class joystickTeleop:
         self.ena_pub.publish(Byte(1))
 
     def toggle_base(self):
+        self.ena = not self.ena
         if self.ena:
             self.base_enable()
         else:
             self.base_disable()
 
-    def send_goal_trigger(self):
+    def send_goal_trigger(self, goal_num):
         rospy.loginfo("Sent goal trigger message\r")
-        self.goal_trig_pub.publish(Empty())
+        self.goal_trig_pub.publish(Int8(goal_num))
 
     def cancel_goal(self):
         rospy.loginfo("Sent cancel message\r")
