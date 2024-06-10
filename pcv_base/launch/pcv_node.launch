@@ -1,44 +1,38 @@
+<?xml version="1.0"?>
 <launch>
-    <arg name="logging"         default="1"/>
-    <arg name="db_type"         default="oracle"/>
-
-    <arg name="keyboard_teleop" default="0"/>
-    <arg name="joystick_teleop" default="0"/>
-    <arg name="remote_teleop"   default="0"/>
-    <arg name="teleop_namespace" default="/"/>
-    <arg name="teleop_rx_port_base" default="17100"/>
-    <arg name="teleop_rx_port"  default="$(eval teleop_rx_port_base + int(env('NODE_NO')))"/>
-
-    <arg name="lidar_safeguard" default="false"/>
-
-    <node pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen">
-        <param name="lidar_safeguard" value="$(arg lidar_safeguard)"/>
+  <arg name="logging" default="0"/>
+  <arg name="db_type" default="oracle"/>
+  <arg name="keyboard_teleop" default="0"/>
+  <arg name="joystick_teleop" default="0"/>
+  <arg name="remote_teleop" default="0"/>
+  <arg name="teleop_namespace" default="/"/>
+  <arg name="teleop_rx_port_base" default="17100"/>
+  <arg name="teleop_rx_port" default="$(eval teleop_rx_port_base + int(env('NODE_NO')))"/>
+  <arg name="lidar_safeguard" default="false"/>
+  <node pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen">
+    <param name="lidar_safeguard" value="$(arg lidar_safeguard)"/>
+  </node>
+  <!--Static Transforms-->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find omniveyor_common)/urdf/omniveyor.urdf.xacro' gazebo:=false"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+  <!-- teleop method -->
+  <group if="$(arg remote_teleop)">
+    <include file="$(find pcv_base)/launch/includes/remote_teleop.launch">
+      <arg name="teleop_namespace" value="$(arg teleop_namespace)"/>
+      <arg name="teleop_rx_port" value="$(arg teleop_rx_port)"/>
+    </include>
+  </group>
+  <group if="$(arg joystick_teleop)">
+    <include file="$(find pcv_base)/launch/includes/joystick_teleop.launch"/>
+  </group>
+  <group if="$(arg keyboard_teleop)">
+    <include file="$(find pcv_base)/launch/includes/keyboard_teleop.launch"/>
+  </group>
+  <group if="$(arg logging)">
+    <!--Logging-->
+    <node pkg="pcv_base" type="databaseLogger.py" name="db_logger" output="screen">
+      <param name="db_type" value="$(arg db_type)"/>
+      <param name="credential_path" value="$(find pcv_base)/../../../dbCredentials.xml"/>
     </node>
-
-    <!--Static Transforms-->
-    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find omniveyor_common)/urdf/omniveyor.urdf.xacro' gazebo:=false" />
-
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
-
-    <!-- teleop method -->
-    <group if="$(arg remote_teleop)">
-        <include file="$(find pcv_base)/launch/includes/remote_teleop.launch">
-            <arg name="teleop_namespace" value="$(arg teleop_namespace)"/>
-            <arg name="teleop_rx_port"  value="$(arg teleop_rx_port)"/>
-        </include>
-    </group>
-    <group if="$(arg joystick_teleop)">
-        <include file="$(find pcv_base)/launch/includes/joystick_teleop.launch" />
-    </group>
-    <group if="$(arg keyboard_teleop)">
-        <include file="$(find pcv_base)/launch/includes/keyboard_teleop.launch" />
-    </group>
-
-    <group if="$(arg logging)">
-        <!--Logging-->
-        <node pkg="pcv_base" type="databaseLogger.py" name="db_logger" output="screen">
-            <param name="db_type" value="$(arg db_type)"/>
-            <param name="credential_path" value="$(find pcv_base)/../../../dbCredentials.xml"/>
-        </node>
-    </group>
+  </group>
 </launch>
