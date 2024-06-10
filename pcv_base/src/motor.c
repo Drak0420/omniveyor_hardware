@@ -827,7 +827,6 @@ static void *listener(void *aux) {
 
   /* listen for messages forever, thread gets cancelled on motor_destroy call */
   while (m->ok) {
-    printf("Motor %d listening", m->no);
     if (read(m->s, &f, sizeof(struct can_frame)) >= 0) {
       // printf("Can ID: %X\n", f.can_id);
       /* translate the can frame */

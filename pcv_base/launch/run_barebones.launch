@@ -8,7 +8,7 @@
     <arg name="teleop_rx_port"  default="$(eval teleop_rx_port_base + int(env('NODE_NO')))"/>
 
     <arg name="front_rgbd" default="1"/>
-    <arg name="rear_rgbd" default="1"/>
+    <arg name="rear_rgbd" default="0"/>
     <arg name="visual_odom" default="1"/>
     <arg name="arduino_payload" default="1"/>
 
