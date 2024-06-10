@@ -55,6 +55,7 @@ struct motor {
   bool stale_trq;
   int32_t inputs; /* digital inputs on the motor controller*/
   bool ok;        /* Quit indicator */
+  bool stateGood;
 };
 
 /*------------------------static function declarations------------------------*/
@@ -120,6 +121,7 @@ struct motor *motor_init(uint8_t motor_no, enum ctrl_mode cm,
   m->stale_vel = true;
   m->stale_trq = true;
   m->ok = true;
+  m->stateGood = true;
 
   /* open a CAN socket for this motor no */
   m->s = create_can_socket(m->no, 0xF);
@@ -828,7 +830,9 @@ static void *listener(void *aux) {
   /* listen for messages forever, thread gets cancelled on motor_destroy call */
   while (m->ok) {
     if (read(m->s, &f, sizeof(struct can_frame)) >= 0) {
-      // printf("Can ID: %X\n", f.can_id);
+      if (!m->stateGood) {
+        printf("Can ID: %X\n", f.can_id);
+      }
       /* translate the can frame */
       switch (f.can_id - m->no) {
       case COB_ID_NMT_EC_TX_BASE: /* NMT */
@@ -926,6 +930,7 @@ static void *listener(void *aux) {
           if (f.data[1] == 0x83 && f.data[2] == 0x31) {
             printf("Motor stalled due to overheating concerns, please wait!");
           }
+          m->stateGood = false;
           // while(1) {}
         }
         break;
