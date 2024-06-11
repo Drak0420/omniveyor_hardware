@@ -66,6 +66,7 @@ static int init_motor(struct motor *m);
 static int32_t get_cal_offset(struct motor *m);
 
 static void *listener(void *aux);
+static void parse_error_message(struct can_frame *msg, uint8_t motor_num);
 
 static void msg_timer_handler(union sigval val);
 static void heartbeat_timer_handler(union sigval val);
@@ -831,7 +832,8 @@ static void *listener(void *aux) {
   while (m->ok) {
     if (read(m->s, &f, sizeof(struct can_frame)) >= 0) {
       if (!m->stateGood) {
-        printf("Can ID: %X\n", f.can_id);
+        printf("Can ID: 0x%X\n", f.can_id - m->no);
+        parse_error_message(&f, m->no);
       }
       /* translate the can frame */
       switch (f.can_id - m->no) {
@@ -923,16 +925,9 @@ static void *listener(void *aux) {
           printf("Error reset or no error \n");
           m->enable_pin_active = true;
         } else {
-          printf("Emergency message received from Motor %d\n", m->no);
-          printf("Data: %X, %X, Field3: %X \n", f.data[1], f.data[0],
-                 f.data[2]);
-          // TODO: put more errors to print out verbosely
-          if (f.data[1] == 0x83 && f.data[2] == 0x31) {
-            printf("Motor stalled due to overheating concerns, please wait!");
-          }
-          m->stateGood = false;
-          // while(1) {}
+          parse_error_message(&f, m->no);
         }
+        m->stateGood = false;
         break;
       default:
         break;
@@ -942,6 +937,19 @@ static void *listener(void *aux) {
       perror("can raw socket read\n");
       exit(-1);
     }
+  }
+}
+
+static void parse_error_message(struct can_frame *msg, uint8_t motor_num) {
+  printf("Emergency message received from Motor %d\n", motor_num);
+  printf("Error Code: 0x%X, 0x%X\t", msg->data[1], msg->data[0]);
+  printf("Error Bit: 0x%X\n", msg->data[2]);
+  printf("Detailed Error Code: 0x%X, 0x%X\t", msg->data[4], msg->data[3]);
+  printf("Manufacture Specific: 0x%X, 0x%X, 0x%X\n", msg->data[7], msg->data[6],
+         msg->data[5]);
+  // TODO: put more errors to print out verbosely
+  if (msg->data[1] == 0x83 && msg->data[2] == 0x31) {
+    printf("Motor stalled due to overheating concerns, please wait!");
   }
 }
 
