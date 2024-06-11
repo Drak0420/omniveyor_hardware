@@ -847,6 +847,7 @@ static void *listener(void *aux) {
           mq_send(m->mQueue, (char *)&e, sizeof(e), 0);
           // printf("MQueue Info - Motor NMT Bootup Event Sent\r\n");
         }
+        m->stateGood = true;
         break;
       case COB_ID_TPDO1_BASE: /* TPDO1 - status word*/
         /* restart the heartbeat timer -- DIRTY FIX TO PREVENT TIMEOUT, NOT
@@ -857,6 +858,7 @@ static void *listener(void *aux) {
         e.param = data_u16[0];
         mq_send(m->mQueue, (char *)&e, sizeof(e), 0);
         // printf("MQueue Info - Motor TPDO1 Status Word Rec Event Sent\r\n");
+        m->stateGood = true;
         break;
       case COB_ID_TPDO2_BASE:         /* TPDO2 - {pos, vel/trq}*/
         data_32 = (int32_t *)&f.data; // why not uint32_t
@@ -876,6 +878,7 @@ static void *listener(void *aux) {
         m->stale_vel = false;
         pthread_mutex_unlock(&m->lock);
         /* end of critical section */
+        m->stateGood = true;
         break;
       case COB_ID_TPDO3_BASE:         /* TPD03 - {current, modes of operation */
         data_16 = (int16_t *)&f.data; // why not uint16_t?
@@ -890,6 +893,7 @@ static void *listener(void *aux) {
                             LP_TRQ_FILTER_COEFF);
         m->stale_trq = false;
         pthread_mutex_unlock(&m->lock);
+        m->stateGood = true;
         break;
       case COB_ID_TPDO4_BASE:         /* TPD04 - digital inputs */
         data_32 = (int32_t *)&f.data; // why not uint32_t?
@@ -901,6 +905,7 @@ static void *listener(void *aux) {
         m->inputs = data_32[0];
         pthread_mutex_unlock(&m->lock);
         /* end of critical section */
+        m->stateGood = true;
         break;
       case COB_ID_SDO_TX_BASE: /* SDO */
         if (f.data[0] == CO_WRITE_Ack) {
@@ -913,6 +918,7 @@ static void *listener(void *aux) {
         /* restart the heartbeat timer -- DIRTY FIX TO PREVENT TIMEOUT, NOT
          * SECURED*/
         timer_settime(m->heartbeat_timer, 0, &itmr, NULL);
+        m->stateGood = true;
         break;
       case COB_ID_EMCY_TX_BASE: /* Emergency message */
         /* restart the heartbeat timer -- DIRTY FIX TO PREVENT TIMEOUT, NOT
