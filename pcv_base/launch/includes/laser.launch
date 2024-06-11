@@ -1,8 +1,12 @@
+<?xml version="1.0"?>
 <launch>
-    <node pkg="urg_node" type="urg_node" name="run_hokuyo_10lx"  output="screen" >
-        <param name="ip_address" value="192.168.0.10"/>
-        <param name="angle_min" value="-1.57"/>
-        <param name="angle_max" value="1.57"/>
-        <!--remap from="scan" to="/temp_scan"/-->
-    </node>
+  <arg name="remote_launch" default="0"/>
+  <include if="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/agv.machine"/>
+  <include unless="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/local.machine"/>
+  <node machine="AGV" pkg="urg_node" type="urg_node" name="run_hokuyo_10lx" output="screen">
+    <param name="ip_address" value="192.168.0.10"/>
+    <param name="angle_min" value="-1.57"/>
+    <param name="angle_max" value="1.57"/>
+    <!--remap from="scan" to="/temp_scan"/-->
+  </node>
 </launch>

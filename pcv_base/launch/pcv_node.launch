@@ -9,17 +9,21 @@
   <arg name="teleop_rx_port_base" default="17100"/>
   <arg name="teleop_rx_port" default="$(eval teleop_rx_port_base + int(env('NODE_NO')))"/>
   <arg name="lidar_safeguard" default="false"/>
-  <node pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen">
+  <arg name="remote_launch" default="0"/>
+  <include if="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/agv.machine"/>
+  <include unless="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/local.machine"/>
+  <node machine="AGV" pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen">
     <param name="lidar_safeguard" value="$(arg lidar_safeguard)"/>
   </node>
   <!--Static Transforms-->
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find omniveyor_common)/urdf/omniveyor.urdf.xacro' gazebo:=false"/>
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+  <node machine="AGV" name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
   <!-- teleop method -->
   <group if="$(arg remote_teleop)">
     <include file="$(find pcv_base)/launch/includes/remote_teleop.launch">
       <arg name="teleop_namespace" value="$(arg teleop_namespace)"/>
       <arg name="teleop_rx_port" value="$(arg teleop_rx_port)"/>
+      <arg name="remote_launch" value="$(arg remote_launch)"/>
     </include>
   </group>
   <group if="$(arg joystick_teleop)">
@@ -30,7 +34,7 @@
   </group>
   <group if="$(arg logging)">
     <!--Logging-->
-    <node pkg="pcv_base" type="databaseLogger.py" name="db_logger" output="screen">
+    <node machine="AGV" pkg="pcv_base" type="databaseLogger.py" name="db_logger" output="screen">
       <param name="db_type" value="$(arg db_type)"/>
       <param name="credential_path" value="$(find pcv_base)/../../../dbCredentials.xml"/>
     </node>

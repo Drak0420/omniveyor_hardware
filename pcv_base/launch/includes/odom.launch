@@ -1,32 +1,34 @@
+<?xml version="1.0"?>
 <launch>
-    <arg name="visual_odom" default="true"/>
-    <arg name="wheel_odom" default="true"/>
-
-    <group if="$(arg visual_odom)">
-        <!-- visual odom & imu (hardware) -->
-        <include file="$(find pcv_base)/launch/includes/realsense-t1.launch" />
-
-        <!-- Odom fusion -->
-        <node pkg="robot_localization" type="ekf_localization_node" name="ekf_odom" clear_params="true">
-            <rosparam command="load" file="$(find pcv_base)/resources/cfg/ekf_odom.yaml" />
-            <remap from="odometry/filtered" to="odom/filtered"/>
-            <!--  Placeholder for output topic remapping
+  <arg name="visual_odom" default="true"/>
+  <arg name="wheel_odom" default="true"/>
+  <arg name="remote_launch" default="0"/>
+  <include if="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/agv.machine"/>
+  <include unless="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/local.machine"/>
+  <group if="$(arg visual_odom)">
+    <!-- visual odom & imu (hardware) -->
+    <include file="$(find pcv_base)/launch/includes/realsense-t1.launch">
+      <arg name="remote_launch" value="$(arg remote_launch)"/>
+    </include>
+    <!-- Odom fusion -->
+    <node machine="AGV" pkg="robot_localization" type="ekf_localization_node" name="ekf_odom" clear_params="true">
+      <rosparam command="load" file="$(find pcv_base)/resources/cfg/ekf_odom.yaml"/>
+      <remap from="odometry/filtered" to="odom/filtered"/>
+      <!--  Placeholder for output topic remapping
             <remap from="accel/filtered" to=""/>
             -->
-        </node>
+    </node>
+  </group>
+  <group unless="$(arg visual_odom)">
+    <group if="$(arg wheel_odom)">
+      <!-- without filter: hard-wire wheel odometer to filtered odometer -->
+      <node machine="AGV" name="odom_repub" pkg="omniveyor_common" type="TFfromOdom_node" output="screen">
+        <param name="odom_topic" value="odom"/>
+        <param name="odom_topic_repub" value="odom/filtered"/>
+      </node>
     </group>
-
-    <group unless="$(arg visual_odom)">
-        <group if="$(arg wheel_odom)">
-            <!-- without filter: hard-wire wheel odometer to filtered odometer -->
-            <node name="odom_repub" pkg="omniveyor_common" type="TFfromOdom_node" output="screen">
-                <param name="odom_topic" value="odom"/>
-                <param name="odom_topic_repub" value="odom/filtered"/>
-            </node>
-        </group>
-        <group unless="$(arg wheel_odom)">
-            <!-- TODO: laser odom utilities -->
-        </group>
+    <group unless="$(arg wheel_odom)">
+      <!-- TODO: laser odom utilities -->
     </group>
-    
+  </group>
 </launch>

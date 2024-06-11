@@ -1,6 +1,10 @@
+<?xml version="1.0"?>
 <launch>
-    <arg name="port" default="/dev/ttyACM0"/>
-    <node pkg="rosserial_python" type="serial_node.py" name="payloadIO" output="screen">
-        <param name="port" value="$(arg port)"/>
-    </node> 
+  <arg name="port" default="/dev/ttyACM0"/>
+  <arg name="remote_launch" default="0"/>
+  <include if="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/agv.machine"/>
+  <include unless="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/local.machine"/>
+  <node machine="AGV" pkg="rosserial_python" type="serial_node.py" name="payloadIO" output="screen">
+    <param name="port" value="$(arg port)"/>
+  </node>
 </launch>
