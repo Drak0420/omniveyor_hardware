@@ -386,6 +386,8 @@ void motor_set_ctrl_mode(struct motor *m, enum ctrl_mode cm) {
       timer_settime(m->msg_timer, 0, &itmr, NULL);
       m->cm = cm;
       return;
+    } else {
+      printf("Recieved error: 0x%X and param: 0x%X", e.type, e.param);
     }
   }
   // puts ("motor_set_ctrl_mode not implemented");
