@@ -681,11 +681,14 @@ static void heartbeat_timer_handler(union sigval val) {
     enum ctrl_mode cm = m->cm;
     // TODO: are these sufficient?
     while (m->fault) {
+      printf("Trying to init motor %d\r\n", m->no);
       if (init_motor(m) != 0)
         continue;
+      printf("Trying to home motor %d\r\n", m->no);
       if (home_motor(m) != 0)
         continue;
       m->fault = false;
+      printf("Motor %d recovered from heartbeat timeout sucessfully", m->no);
     }
     motor_set_ctrl_mode(m, cm);
 
