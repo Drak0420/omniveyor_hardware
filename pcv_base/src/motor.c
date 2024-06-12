@@ -926,7 +926,7 @@ static void *listener(void *aux) {
       case COB_ID_EMCY_TX_BASE: /* Emergency message */
         /* restart the heartbeat timer -- DIRTY FIX TO PREVENT TIMEOUT, NOT
          * SECURED*/
-        timer_settime(m->heartbeat_timer, 0, &itmr, NULL);
+        // timer_settime(m->heartbeat_timer, 0, &itmr, NULL);
         if ((f.data[0] == 0x41) && (f.data[1] == 0x54)) {
           m->enable_pin_active = false;
           printf("Motor %d enable pin DISABLED\n", m->no);
