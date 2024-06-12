@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import subprocess
 
 import rospy
 from actionlib_msgs.msg import GoalID
@@ -46,12 +47,20 @@ class joystickTeleop:
         "\tDown: Decrease global speed by 10%\n\r"
         "\tRight: Increase rotation speed by 10%\n\r"
         "\tLeft: Decrease rotation speed by 10%\n\r"
+        "\nSettings\n\r"
+        "___________________________________________________\n\r"
         "OPTION: Enable/Disable motors\n\r"
         "Left Joystick Press: Enable/Disable rotation with left joystick\n\r"
-        "Share: Reset robot to initial position in software\n\r"
+        "SHARE: Reset robot to initial position in software\n\r"
         "\t\tRequires manual manuveur to desired location first!\n\r"
-        "Cross: Help Menu\n\r"
-        "Triangle: Send trigger message to goal sender node\n\r"
+        "PS Logo\n\r"
+        "\tIf L1 or R1 pressed, full resets motors\n\r"
+        "Otherwise, brings up this help menu\n\r"
+        "\nGoal Options\n\r"
+        "___________________________________________________\n\r"
+        "Triangle: Send goal trigger #0\n\r"
+        "Circle: Send goal trigger #1\n\r"
+        "Cross: Send goal trigger #2\n\r"
         "Square: Cancel current goal\n\r"
     )
 
@@ -105,7 +114,11 @@ class joystickTeleop:
         self.button_press(circle, "circle", self.send_goal_trigger, 1)
         self.button_press(cross, "cross", self.send_goal_trigger, 2)
         self.button_press(square, "square", self.cancel_goal)
-        self.button_press(ps_logo, "ps_logo", rospy.loginfo, self.CMD_HELP)
+        if l1 or r1:
+            self.button_press(ps_logo, "ps_logo", reset_motors)
+        else:
+            self.button_press(ps_logo, "ps_logo", rospy.loginfo, self.CMD_HELP)
+
         if dpad_hort or dpad_vert:
             self.update_speed_and_turn(dpad_hort, dpad_vert)
 
@@ -237,6 +250,10 @@ class joystickTeleop:
 
     def shutdown(self):
         self.base_disable()
+
+
+def reset_motors():
+    subprocess.run(["rosnode", "kill", "pcv_base_node"])
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@
   <arg name="remote_launch" default="0"/>
   <include if="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/agv.machine"/>
   <include unless="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/local.machine"/>
-  <node machine="AGV" pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen">
+  <node machine="AGV" pkg="pcv_base" type="pcv_base_node" name="pcv_base_node" output="screen" respawn="true">
     <param name="lidar_safeguard" value="$(arg lidar_safeguard)"/>
   </node>
   <!--Static Transforms-->
