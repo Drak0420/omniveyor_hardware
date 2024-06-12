@@ -11,8 +11,8 @@
   <arg name="depth_width" default="848"/>
   <arg name="depth_height" default="480"/>
   <arg name="color_fps" default="15"/>
-  <arg name="depth_fps" default="15"/>
-  <arg name="clip_distance" default="8.0"/>
+  <arg name="depth_fps" default="5"/>
+  <arg name="clip_distance" default="6.0"/>
   <arg name="remote_launch" default="0"/>
   <include if="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/agv.machine"/>
   <include unless="$(arg remote_launch)" file="$(find omniveyor_mobility)/launch/local.machine"/>
