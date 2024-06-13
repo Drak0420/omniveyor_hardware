@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:2.3" xmlns="urn:mtconnect.org:MTConnectDevices:2.3" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:2.3 http://mtconnect.org" xlmns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Header creationTime="2023-06-13T15:52:05Z" sender="" version="2.3" instanceId="1" assetCount="0" assetBufferSize="1"/>
+  <Devices>
+    <Device id="agv1" uuid="agv1" name="agv1">
+      <Description>Omniveyor AGV</Description>
+      <DataItems>
+        <DataItem id="avail" name="avail" type="AVAILABILITY" category="EVENT"/>
+        <DataItem id="elec_status" name="elec_status" type="VOLTS" units="VOLTS"/>
+      </DataItems>
+      <Components>
+        <Axes id="agv" name="base">
+          <Components>
+            <Linear id="x" name="X">
+              <DataItems>
+                <DataItem type="POSITION" subType="ACTUAL" category="SAMPLE" id="Xabs" name="Xabs" units="MILLIMETER"/>
+              </DataItems>
+            </Linear>
+            <Linear id="y" name="Y">
+              <DataItems>
+                <DataItem type="POSITION" subType="ACTUAL" category="SAMPLE" id="Yabs" name="Yabs" units="MILLIMETER"/>
+              </DataItems>
+            </Linear>
+            <Rotary id="a" name="A">
+              <DataItems>
+                <DataItem type="ANGLE" subType="ACTUAL" category="SAMPLE" id="Aabs" name="Aabs" units="DEGREE"/>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="cont" name="controller">
+          <DataItems>
+            <DataItem type="EXECUTION" category="EVENT" id="execution_status" name="execution_status"/>
+          </DataItems>
+        </Controller>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>
