@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import rospy
 from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseWithCovarianceStamped
