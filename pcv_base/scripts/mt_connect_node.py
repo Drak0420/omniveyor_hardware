@@ -4,8 +4,8 @@ import rospy
 from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from omniveyor_common.msg import electricalStatus
-from .mt_connect.mtconnect_adapter import Adapter
-from .mt_connect.data_item import Sample, Event
+from mt_connect.mtconnect_adapter import Adapter
+from mt_connect.data_item import Sample, Event
 
 
 class mt_connect_node:
