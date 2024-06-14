@@ -51,7 +51,7 @@ class joystickTeleop:
         "___________________________________________________\n\r"
         "OPTION: Enable/Disable motors\n\r"
         "Left Joystick Press: Enable/Disable rotation with left joystick\n\r"
-        "SHARE: Reset robot to initial position in software\n\r"
+        "SHARE: Set current position as origin in software\n\r"
         "\t\tRequires manual manuveur to desired location first!\n\r"
         "PS Logo\n\r"
         "\tIf L1 or R1 pressed, full resets motors\n\r"
@@ -85,7 +85,7 @@ class joystickTeleop:
         rospy.Subscriber("electricalStatus", electricalStatus, self.status_cb)
         rospy.on_shutdown(self.shutdown)
 
-    def joy_cb(self, msg):
+    def joy_cb(self, msg: Joy):
         # map msg to user_readable values
         ljoy_hort, ljoy_vert, l2, rjoy_hort, rjoy_vert, r2, dpad_hort, dpad_vert = (
             msg.axes
@@ -115,7 +115,7 @@ class joystickTeleop:
         self.button_press(cross, "cross", self.send_goal_trigger, 2)
         self.button_press(square, "square", self.cancel_goal)
         if l1 or r1:
-            self.button_press(ps_logo, "ps_logo", reset_motors)
+            self.button_press(ps_logo, "ps_logo", self.reset_motors)
         else:
             self.button_press(ps_logo, "ps_logo", rospy.loginfo, self.CMD_HELP)
 
@@ -149,7 +149,7 @@ class joystickTeleop:
         # print(self.debug_msg(msg, cmd))
 
     @debounce(30)
-    def status_cb(self, msg):
+    def status_cb(self, msg: electricalStatus):
         # Only run log every x seconds to avoid spam
         info_msg = (
             "Voltages\n\r"
@@ -165,7 +165,7 @@ class joystickTeleop:
         rospy.spin()
         self.base_disable()
 
-    def button_press(self, curr_value, prev_attr, func, *args):
+    def button_press(self, curr_value, prev_attr: str, func, *args):
         """
         Function to get trigger states from buttons
 
@@ -181,16 +181,16 @@ class joystickTeleop:
             if curr_value == 1:
                 func(*args)
 
-    def toggle_value(self, toggle_attr):
+    def toggle_value(self, toggle_attr: str):
         toggle_value = getattr(self, toggle_attr)
         setattr(self, toggle_attr, not toggle_value)
 
     @debounce(0.1)
-    def update_speed_and_turn(self, dpad_hort, dpad_vert):
+    def update_speed_and_turn(self, dpad_hort: float, dpad_vert: float):
         self.turn *= self.scaling_factor.get(-dpad_hort, 1)
         self.speed *= self.scaling_factor.get(dpad_vert, 1)
 
-    def debug_msg(self, msg, cmd):
+    def debug_msg(self, msg: Joy, cmd: Twist):
         return (
             "Axes:"
             + str(msg.axes)
@@ -202,7 +202,7 @@ class joystickTeleop:
             + str(cmd)
         )
 
-    def status(self):
+    def status(self) -> str | None:
         msg = (
             "Motors enabled: "
             + str(self.ena)
@@ -251,9 +251,8 @@ class joystickTeleop:
     def shutdown(self):
         self.base_disable()
 
-
-def reset_motors():
-    subprocess.run(["rosnode", "kill", "pcv_base_node"])
+    def reset_motors(self):
+        subprocess.run(["rosnode", "kill", "pcv_base_node"])
 
 
 if __name__ == "__main__":
