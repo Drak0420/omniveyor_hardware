@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import time
 import subprocess
@@ -15,7 +15,7 @@ from geometry_msgs.msg import (
 )
 from omniveyor_common.msg import electricalStatus
 from sensor_msgs.msg import Joy
-from std_msgs.msg import Byte, Empty, Int8
+from std_msgs.msg import Byte, Int8
 
 
 def debounce(interval):
@@ -202,7 +202,7 @@ class joystickTeleop:
             + str(cmd)
         )
 
-    def status(self) -> str | None:
+    def status(self):
         msg = (
             "Motors enabled: "
             + str(self.ena)
