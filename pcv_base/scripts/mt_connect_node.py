@@ -57,6 +57,7 @@ class mt_connect_node:
             + msg.roll_4_Volt
         ) / 8
         avg_voltage = round(avg_voltage, 3)
+        rospy.logdebug(f"Voltage logged: {avg_voltage}")
         self.adapter.begin_gather()
         self.elec_status.set_value(avg_voltage)
         self.adapter.complete_gather()
@@ -72,12 +73,14 @@ class mt_connect_node:
             GoalStatus.RECALLED,
             GoalStatus.LOST,
         ):
+            # rospy.logdebug("Goal status logged: READY")
             self.execution_status.set_value("READY")
         elif msg.status in (
             GoalStatus.ACTIVE,
             GoalStatus.PREEMPTING,
             GoalStatus.RECALLING,
         ):
+            # rospy.logdebug("Goal status logged: ACTIVE")
             self.execution_status.set_value("ACTIVE")
         self.adapter.complete_gather()
 
@@ -94,6 +97,7 @@ class mt_connect_node:
         self.avail.set_value("UNAVAILABLE")
         self.execution_status.set_value("STOPPED")
         self.adapter.complete_gather()
+        rospy.logdebug("MTconnect node sucessfully stopped")
 
     def main(self):
         rospy.spin()
