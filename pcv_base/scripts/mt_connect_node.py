@@ -15,7 +15,7 @@ class mt_connect_node:
         self.adapter = Adapter((self.host, self.port))
 
         # Data Items
-        rospy.Subscriber("electrical_status", electricalStatus, self.elec_status_cb)
+        rospy.Subscriber("electricalStatus", electricalStatus, self.elec_status_cb)
         rospy.Subscriber("robot_status", GoalStatus, self.goal_status_cb)
         rospy.Subscriber("map_pose", PoseWithCovarianceStamped, self.position_cb)
 
@@ -57,7 +57,7 @@ class mt_connect_node:
             + msg.roll_4_Volt
         ) / 8
         avg_voltage = round(avg_voltage, 3)
-        rospy.logdebug(f"Voltage logged: {avg_voltage}")
+        # rospy.logdebug(f"Voltage logged: {avg_voltage}")
         self.adapter.begin_gather()
         self.elec_status.set_value(avg_voltage)
         self.adapter.complete_gather()
