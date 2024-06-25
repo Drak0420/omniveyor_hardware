@@ -104,6 +104,9 @@ class mt_connect_node:
 
 
 if __name__ == "__main__":
-    rospy.init_node("mt_connect_node")
-    mt = mt_connect_node()
-    mt.main()
+    try:
+        rospy.init_node("mt_connect_node", anonymous=True)
+        mt = mt_connect_node()
+        mt.main()
+    except rospy.ROSInterruptException as e:
+        print(e)
