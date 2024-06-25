@@ -371,6 +371,7 @@ void motor_set_ctrl_mode(struct motor *m, enum ctrl_mode cm) {
   struct event e;
   struct itimerspec itmr = {{0}};
   itmr.it_value.tv_sec = MSG_TIMEOUT;
+  printf("Sending first msg in enable sequence");
   CO_send_message(m->s, m->no, &msg);
   timer_settime(m->msg_timer, 0, &itmr, NULL);
   while (1) {
@@ -382,6 +383,7 @@ void motor_set_ctrl_mode(struct motor *m, enum ctrl_mode cm) {
       m->cm = old;
       return;
     } else if (e.type == SDO_WR_ACK && e.param == MODES_OF_OPERATION) {
+      printf("Successfully set motor control mode");
       itmr.it_value.tv_sec = 0;
       timer_settime(m->msg_timer, 0, &itmr, NULL);
       m->cm = cm;
