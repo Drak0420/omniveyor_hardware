@@ -1091,8 +1091,13 @@ static int home_motor(struct motor *m) {
         puts("msg timer timeout, home_motor failed\r\n");
         return -1;
       }
-      if (e.type == STATUS_WRD_REC && e.param == 0xD637)
-        break;
+      if (e.type == STATUS_WRD_REC) {
+        printf("Motor #%d - Status code: %X", m->no, e.param);
+        if (e.param == 0xD637) {
+          printf("Succeeded in homing motor %d", m->no);
+          break;
+        }
+      }
     }
 
     /* stop timer */
